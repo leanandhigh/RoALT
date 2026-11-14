@@ -1,22 +1,32 @@
 @layer components {
-  /* The well: the colour itself, its code on it. */
+  /* The well: a field with the colour's square, its code and a chevron. */
   .cp-well {
-    position: relative;
     display: inline-flex;
-    align-items: flex-end;
-    justify-content: flex-start;
-    width: 132px;
+    align-items: center;
+    gap: 10px;
     height: 36px;
-    padding: 0 8px 5px;
-    border-radius: var(--r-sm);
+    padding: 0 10px 0 6px;
     border: 0;
-    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14), inset 0 0 0 2px rgb(0 0 0 / 0.25);
+    border-radius: var(--r-sm);
+    background: var(--surface-2);
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+  .cp-well:hover {
+    background: var(--surface-3);
+  }
+  .cp-swatch {
+    width: 24px;
+    height: 24px;
+    border-radius: 5px;
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.15);
   }
   .cp-code {
-    font-size: 11px;
-    font-weight: 600;
-    color: #fff;
-    text-shadow: 0 1px 2px rgb(0 0 0 / 0.6);
+    font-size: 12.5px;
+    color: var(--fg);
+    letter-spacing: 0.02em;
+  }
+  .cp-chev {
+    color: var(--fg-3);
   }
   .cp-pop {
     width: 240px;

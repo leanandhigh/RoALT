@@ -1,6 +1,7 @@
 import "./color-picker.css";
 import { useEffect, useId, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { t } from "../i18n";
+import { Icon } from "./Icon";
 import { Popover, useAnchor } from "./Popover";
 
 type Hsv = { h: number; s: number; v: number };
@@ -88,8 +89,10 @@ export function ColorPicker({ value, onChange, label }: { value: string; onChang
 
   return (
     <>
-      <button type="button" className="cp-well" popoverTarget={`cp-${id}`} style={{ ...anchor.style, background: show }} aria-label={label} data-tip={label}>
+      <button type="button" className="cp-well" popoverTarget={`cp-${id}`} style={anchor.style} aria-label={`${label}: ${show.toUpperCase()}`}>
+        <span className="cp-swatch" style={{ background: show }} />
         <span className="cp-code mono">{show.toUpperCase()}</span>
+        <Icon name="chevron" size={12} className="cp-chev" />
       </button>
       <Popover id={`cp-${id}`} anchor={anchor.name} placement="below-end" role="dialog" label={label} className="cp-pop" onToggle={(open) => !open && commit()}>
         <div
