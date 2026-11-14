@@ -19,10 +19,7 @@ export type Settings = { theme: Theme, tabLayout: TabLayout,
  * `#rrggbb`, or "" for the theme's own lime.
  */
 accent: string, 
-/**
- * How much of the theme's background covers a custom background image, 0-95 %.
- */
-backgroundDim: number, density: Density, 
+density: Density, 
 /**
  * Master-password mode only.
  */

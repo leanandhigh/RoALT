@@ -61,7 +61,7 @@ function Root() {
 
   // Everything on screen asks again; the webview itself is never reloaded. Not the background
   // image: only Appearance changes it (and refreshes it), and a reread is up to 8 MB.
-  const refresh = () => void qc.invalidateQueries({ predicate: (q) => q.queryKey[0] !== qk.background[0] });
+  const refresh = () => void qc.invalidateQueries();
 
   const lock = () => {
     manualLockAt.current = Date.now();

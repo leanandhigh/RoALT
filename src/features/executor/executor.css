@@ -72,7 +72,7 @@
     white-space: pre;
   }
   .ex-code:focus { outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent); outline-offset: -1px; }
-  .ex-editor-acts { display: flex; justify-content: flex-end; gap: 8px; }
+  .ex-editor-acts { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
 }
 
 @layer views {

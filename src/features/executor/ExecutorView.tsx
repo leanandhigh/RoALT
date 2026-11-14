@@ -9,6 +9,7 @@ import { Button, IconButton } from "../../ui/Button";
 import { Switch } from "../../ui/controls";
 import { ConfirmDialog, Dialog } from "../../ui/Dialog";
 import { Input } from "../../ui/Field";
+import { CodeEditor } from "../../ui/CodeEditor";
 import { Icon } from "../../ui/Icon";
 import { StatusPill } from "../../ui/Status";
 import { toast, toastError } from "../../ui/Toast";
@@ -225,11 +226,22 @@ function ScriptEditor({ value, onClose, onSaved }: {
       .finally(() => setSaving(false));
   };
   return (
-    <Dialog open={value !== null} onClose={onClose} title={value?.isNew ? t("executor.newScript") : value?.name ?? ""} width={720}>
+    <Dialog open={value !== null} onClose={onClose} title={value?.isNew ? t("executor.newScript") : t("executor.edit")} width={820}>
       <div className="ex-editor">
-        {value?.isNew && <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="autofarm.lua" aria-label={t("executor.fileName")} autoFocus />}
-        <textarea className="ex-code" spellCheck={false} value={text} onChange={(e) => setText(e.target.value)} aria-label={t("executor.script")} />
+        {value?.isNew && (
+          <Input leading="file" value={name} onChange={(e) => setName(e.target.value)} placeholder="autofarm.lua" aria-label={t("executor.fileName")} autoFocus />
+        )}
+        <CodeEditor
+          value={text}
+          onChange={setText}
+          label={t("executor.script")}
+          name={value?.isNew ? name.trim() || "autofarm.lua" : value?.name}
+          onSave={save}
+          minRows={18}
+          autoFocus={!value?.isNew}
+        />
         <div className="ex-editor-acts">
+          <span className="meta me-auto">{t("executor.saveHint")}</span>
           <Button variant="ghost" onClick={onClose}>
             {t("common.cancel")}
           </Button>

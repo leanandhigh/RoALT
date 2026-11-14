@@ -386,9 +386,17 @@ impl Progress {
         self.exec.lock().unwrap_or_else(|e| e.into_inner())
     }
 
-    /// Queues `code` for each of `targets` (account keys that have reported); their ids.
+    /// Queues `code` for each of `targets` that is online (reported in the last `ONLINE_MS`); their ids.
     fn exec_queue(&self, targets: &[String], code: &str) -> Vec<String> {
-        let names: HashMap<String, String> = self.stored().accounts.values().map(|a| (a.key.clone(), if a.display_name.is_empty() { a.name.clone() } else { a.display_name.clone() })).collect();
+        // Only accounts reporting now: an offline client would never pick it up.
+        let now = now_ms();
+        let names: HashMap<String, String> = self
+            .stored()
+            .accounts
+            .values()
+            .filter(|a| now - a.last_seen <= ONLINE_MS)
+            .map(|a| (a.key.clone(), if a.display_name.is_empty() { a.name.clone() } else { a.display_name.clone() }))
+            .collect();
         let first = code.lines().find(|l| !l.trim().is_empty()).unwrap_or_default().chars().take(80).collect::<String>();
         let mut x = self.exec();
         let mut ids = Vec::new();

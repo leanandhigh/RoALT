@@ -1,0 +1,133 @@
+@layer components {
+  /* An editor in its own dark well (in either theme): code reads best on dark. */
+  .ce {
+    --ce-bg: #0d0d10;
+    --ce-line: #232329;
+    --ce-fg: #e4e4ea;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    border-radius: var(--r-md);
+    background: var(--ce-bg);
+    box-shadow: inset 0 0 0 1px var(--ce-line);
+    overflow: hidden;
+  }
+  .ce:focus-within {
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 60%, var(--ce-line));
+  }
+  .ce-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 36px;
+    padding: 0 8px 0 12px;
+    border-bottom: 1px solid var(--ce-line);
+    color: #9a9aa6;
+    font-size: 12px;
+  }
+  .ce-lang {
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: rgb(127 178 255 / 0.12);
+    color: #7fb2ff;
+    font-weight: 650;
+    font-size: 11px;
+  }
+  .ce-name {
+    color: var(--ce-fg);
+    font-family: var(--font-code);
+    font-size: 12px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ce-meta {
+    color: #6b6b76;
+    white-space: nowrap;
+  }
+  .ce-sp {
+    flex: 1;
+  }
+  .ce-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 26px;
+    padding: 0 9px;
+    border: 0;
+    border-radius: 5px;
+    background: rgb(255 255 255 / 0.06);
+    color: #c9c9d2;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .ce-btn:hover:not(:disabled) {
+    background: rgb(255 255 255 / 0.11);
+    color: #fff;
+  }
+  .ce-btn:disabled {
+    opacity: 0.4;
+  }
+  .ce-body {
+    position: relative;
+    display: flex;
+    flex: 1;
+    min-height: calc(var(--ce-rows) * 1.65 * 12.5px + 24px);
+    font: 12.5px/1.65 var(--font-code);
+  }
+  .ce-gutter {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    min-width: 44px;
+    padding: 12px 10px 12px 0;
+    overflow: hidden;
+    border-right: 1px solid var(--ce-line);
+    color: #4c4c56;
+    text-align: right;
+    user-select: none;
+  }
+  .ce-text {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+  }
+  .ce-under,
+  .ce-area {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    padding: 12px 14px;
+    font: inherit;
+    tab-size: 4;
+    white-space: pre;
+    overflow: auto;
+  }
+  .ce-under {
+    color: var(--ce-fg);
+    pointer-events: none;
+    overflow: hidden;
+  }
+  /* Typed into, shown by the coloured copy under it: only the caret and the selection show. */
+  .ce-area {
+    border: 0;
+    outline: none;
+    resize: none;
+    background: transparent;
+    color: transparent;
+    caret-color: #fff;
+  }
+  .ce-area::selection {
+    background: rgb(127 178 255 / 0.28);
+    color: transparent;
+  }
+  .ce-area::placeholder {
+    color: #55555f;
+  }
+  .ce .lx-c { color: #6b7280; font-style: italic; }
+  .ce .lx-s { color: #9ecf6e; }
+  .ce .lx-n { color: #f0a35c; }
+  .ce .lx-k { color: #ff6b81; }
+  .ce .lx-f { color: #7fb2ff; }
+}

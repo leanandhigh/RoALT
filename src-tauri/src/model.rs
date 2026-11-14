@@ -260,8 +260,6 @@ pub struct Settings {
     pub tab_layout: TabLayout,
     /// `#rrggbb`, or "" for the theme's own lime.
     pub accent: String,
-    /// How much of the theme's background covers a custom background image, 0-95 %.
-    pub background_dim: u8,
     pub density: Density,
     /// Master-password mode only.
     pub auto_lock_minutes: u32,
@@ -574,7 +572,6 @@ impl Default for Settings {
             theme: Theme::Dark,
             tab_layout: TabLayout::Top,
             accent: String::new(),
-            background_dim: 60,
             density: Density::Detailed,
             auto_lock_minutes: 15,
             clipboard_clear_seconds: 30,
@@ -649,8 +646,6 @@ pub struct SettingsPatch {
     pub tab_layout: Option<TabLayout>,
     #[ts(optional)]
     pub accent: Option<String>,
-    #[ts(optional)]
-    pub background_dim: Option<u8>,
     #[ts(optional)]
     pub density: Option<Density>,
     #[ts(optional)]

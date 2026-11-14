@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { t, type Key } from "../../i18n";
+import { highlightLua as highlight } from "../../ui/CodeEditor";
 import { Icon, type IconName } from "../../ui/Icon";
 import { Dialog } from "../../ui/Dialog";
 import { toastError } from "../../ui/Toast";
@@ -106,30 +107,6 @@ const HELPERS: [string, Key][] = [
   ["num(v)", "progress.docsHNum"],
   ["P.player · P.require(m) · P.report", "progress.docsHP"],
 ];
-
-/** Lua, coloured: comments, strings, numbers, keywords and calls (pure; the text is escaped by React). */
-const KEYWORDS = new Set(["local", "function", "end", "if", "then", "else", "elseif", "for", "in", "do", "while", "repeat", "until", "return", "not", "and", "or", "nil", "true", "false"]);
-function highlight(code: string): ReactNode[] {
-  const out: ReactNode[] = [];
-  const re = /(--[^\n]*)|("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*')|(\b\d[\d.]*\b)|([A-Za-z_][A-Za-z0-9_]*)(\s*\()?/g;
-  let last = 0;
-  let m: RegExpExecArray | null;
-  let k = 0;
-  while ((m = re.exec(code))) {
-    if (m.index > last) out.push(code.slice(last, m.index));
-    if (m[1]) out.push(<span key={k++} className="lx-c">{m[1]}</span>);
-    else if (m[2]) out.push(<span key={k++} className="lx-s">{m[2]}</span>);
-    else if (m[3]) out.push(<span key={k++} className="lx-n">{m[3]}</span>);
-    else if (m[4]) {
-      const cls = KEYWORDS.has(m[4]) ? "lx-k" : m[5] ? "lx-f" : undefined;
-      out.push(cls ? <span key={k++} className={cls}>{m[4]}</span> : m[4]);
-      if (m[5]) out.push(m[5]);
-    }
-    last = re.lastIndex;
-  }
-  if (last < code.length) out.push(code.slice(last));
-  return out;
-}
 
 function Code({ code, file }: { code: string; file?: string }) {
   const [copied, setCopied] = useState(false);

@@ -403,9 +403,6 @@ export const api = {
   logsOpen: () => invoke<void>("logs_open"),
   /** The last lines of mtwin.log, oldest first. */
   debugTail: (lines: number) => invoke<string[]>("debug_tail", { lines }),
-  backgroundSet: (path: string) => invoke<void>("background_set", { path }),
-  backgroundClear: () => invoke<void>("background_clear"),
-  backgroundGet: () => invoke<ArrayBuffer>("background_get"),
   /** Deletes Roblox client logs over a day old or 50 MB, never a running client's. */
   logsClean: () => invoke<LogsCleaned>("logs_clean"),
   browserDataReset: () => invoke<boolean>("browser_data_reset"),

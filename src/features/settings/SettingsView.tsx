@@ -14,7 +14,7 @@ import { SettingSection } from "./kit/SettingSection";
 import { dyn, shown } from "./registry";
 import { keyOf, placeNames, search, type Hit, type HitGroup } from "./search";
 import { SupportRow, VersionRow } from "./rows/about";
-import { AccentRow, BackgroundRow, MotionRow, SoundRow } from "./rows/appearance";
+import { AccentRow, MotionRow, SoundRow } from "./rows/appearance";
 import { BackupRow, BrowserDataRow, CleanLogsRow, DataFolderRow } from "./rows/data";
 import { BreakerRow, MultiRow, PerAccountRow, PlayFpsRow, SameServerRow, ShutdownRow } from "./rows/launching";
 import { EncryptionRow, MasterPasswordRow, PublicNetworkRow, RecoveryCodeRow } from "./rows/security";
@@ -29,7 +29,6 @@ const RENDERERS: RowRenderers = {
   sameServer: SameServerRow,
   shutdown: ShutdownRow,
   accent: AccentRow,
-  background: BackgroundRow,
   sounds: SoundRow,
   motion: MotionRow,
   encryption: EncryptionRow,

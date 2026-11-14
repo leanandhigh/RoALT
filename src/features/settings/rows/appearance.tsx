@@ -1,19 +1,13 @@
-import { useId, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { open as openFile } from "@tauri-apps/plugin-dialog";
-import { api } from "../../../api";
-import { qk, useBackgroundUrl } from "../../../data";
+import { useId } from "react";
 import { t } from "../../../i18n";
 import { Button } from "../../../ui/Button";
 import { Segmented, Switch } from "../../../ui/controls";
 import { ColorPicker } from "../../../ui/ColorPicker";
 import { BRAND_ACCENT } from "../../../app/theme";
-import { Collapse, Morph, setMotionPreference, Swap, useMotionPreference } from "../../../ui/motion";
+import { Collapse, setMotionPreference, useMotionPreference } from "../../../ui/motion";
 import { playSound, previewSound, setSoundPreferences, useSoundPreferences } from "../../../ui/sounds";
 import { useRow } from "../kit/rowError";
 import { SettingRow } from "../kit/SettingRow";
-
-const IMAGES = ["png", "jpg", "jpeg", "webp", "gif"];
 
 /** One colour picker; Reset goes back to MTwin red. */
 function AccentPicker() {
@@ -35,50 +29,6 @@ export function AccentRow() {
   return (
     <SettingRow id="accent">
       <AccentPicker />
-    </SettingRow>
-  );
-}
-
-/** Choose a picture, or with one set: its thumbnail, Change… and Remove. How much the theme covers it
- * is the sub-row under this one (the registry's backgroundDim). */
-function BackgroundControls() {
-  const row = useRow();
-  const qc = useQueryClient();
-  // The thumbnail is the theme's own URL: no second copy of the picture.
-  const url = useBackgroundUrl();
-  const [busy, setBusy] = useState(false);
-  const has = row.ctx.background;
-  const run = (p: Promise<unknown>) => {
-    setBusy(true);
-    row.setError(null);
-    p.then(() => qc.invalidateQueries({ queryKey: qk.background }))
-      .then(() => row.refocus(), row.fail)
-      .finally(() => setBusy(false));
-  };
-  async function pick() {
-    const path = await openFile({ multiple: false, directory: false, filters: [{ name: t("settings.images"), extensions: IMAGES }], title: t("settings.backgroundDialog") }).catch(row.fail);
-    if (path) run(api.backgroundSet(path));
-  }
-  // The main button stays the same element as its words change, so it keeps the focus.
-  return (
-    <Morph innerClassName="gap-2">
-      {has && url && <img src={url} alt="" className="set-thumb enter" />}
-      <Button size="md" busy={busy} onClick={() => !busy && void pick()}>
-        <Swap k={has ? "change" : "choose"}>{has ? t("settings.change") : t("settings.choose")}</Swap>
-      </Button>
-      {has && (
-        <Button size="md" variant="ghost" className="enter" onClick={() => !busy && run(api.backgroundClear())}>
-          {t("common.remove")}
-        </Button>
-      )}
-    </Morph>
-  );
-}
-
-export function BackgroundRow() {
-  return (
-    <SettingRow id="background">
-      <BackgroundControls />
     </SettingRow>
   );
 }

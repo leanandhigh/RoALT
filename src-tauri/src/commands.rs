@@ -1354,55 +1354,6 @@ pub async fn browser_data_reset(app: AppHandle, s: State<'_, App>) -> Result<boo
     blocking(move || webview::reset_profiles(&app, &dir)).await
 }
 
-const BACKGROUND_KEY: &str = "background";
-const BACKGROUND_MAX: u64 = 8 * 1024 * 1024;
-
-/// PNG, JPEG, WebP or GIF, by its first bytes (pure).
-fn is_image(b: &[u8]) -> bool {
-    b.starts_with(&[0x89, b'P', b'N', b'G', 0x0d, 0x0a, 0x1a, 0x0a])
-        || b.starts_with(&[0xff, 0xd8, 0xff])
-        || b.starts_with(b"GIF8")
-        || (b.len() >= 12 && b.starts_with(b"RIFF") && &b[8..12] == b"WEBP")
-}
-
-/// Keeps a copy of the picked image (up to 8 MB) in the database as the window's background.
-#[tauri::command]
-pub async fn background_set(s: State<'_, App>, path: String) -> Result<()> {
-    let bytes = blocking(move || -> Result<Vec<u8>> {
-        if std::fs::metadata(&path)?.len() > BACKGROUND_MAX {
-            return Err(AppError::Invalid(tr!("Pick an image of 8 MB or less.")));
-        }
-        Ok(std::fs::read(&path)?)
-    })
-    .await??;
-    if !is_image(&bytes) {
-        return Err(AppError::Invalid(tr!("Pick a PNG, JPEG, WebP or GIF image.")));
-    }
-    s.db.set_setting_value(BACKGROUND_KEY, Some(&crate::discord::hex(&bytes)))
-}
-
-#[tauri::command]
-pub fn background_clear(s: State<'_, App>) -> Result<()> {
-    s.db.set_setting_value(BACKGROUND_KEY, None)
-}
-
-/// The background image's bytes; empty when none is set.
-#[tauri::command]
-pub async fn background_get(s: State<'_, App>) -> Result<tauri::ipc::Response> {
-    let bytes = s
-        .db
-        .setting_value(BACKGROUND_KEY)?
-        .and_then(|h| {
-            let b = crate::discord::unhex(&h);
-            if b.is_none() {
-                log::warn!("stored background isn't valid hex; showing none");
-            }
-            b
-        })
-        .unwrap_or_default();
-    Ok(tauri::ipc::Response::new(bytes))
-}
-
 /// Seconds until the shutdown (pure): `in_secs`, else until `at_ms` (rounded up); 1 minute to 7 days.
 fn shutdown_secs(at_ms: Option<i64>, in_secs: Option<u32>, now_ms: i64) -> Result<u32> {
     let secs = match (in_secs, at_ms) {
@@ -3454,12 +3405,6 @@ pub fn settings_set(app: AppHandle, s: State<'_, App>, patch: SettingsPatch) -> 
         }
         v.accent = a.to_ascii_lowercase();
     }
-    if let Some(d) = patch.background_dim {
-        if d > 95 {
-            return Err(AppError::Invalid(tr!("The background dim must be 0 to 95 %.")));
-        }
-        v.background_dim = d;
-    }
     if let Some(d) = patch.density { v.density = d }
     if let Some(m) = patch.auto_lock_minutes {
         if m > 24 * 60 {
@@ -3644,7 +3589,7 @@ mod tests {
         }
     }
 
-    use super::{GameDetails, GameInfo, find_cookies, game_info_of, is_image, normalize_cookie, ram_accounts, shutdown_secs};
+    use super::{GameDetails, GameInfo, find_cookies, game_info_of, normalize_cookie, ram_accounts, shutdown_secs};
 
     #[test]
     fn servers_estimate_rounds_up_and_needs_a_size() {
@@ -3682,17 +3627,6 @@ mod tests {
         let v = value_of(&many, None);
         assert_eq!((v.top.len(), v.top[0].asset_id, v.count, v.partial), (TOP_ITEMS, 15, 15, true));
         assert!(!crate::model::Settings::default().rolimons_values, "Rolimons is off until turned on");
-    }
-
-    #[test]
-    fn knows_images_by_their_bytes() {
-        assert!(is_image(&[0x89, b'P', b'N', b'G', b'\r', b'\n', 0x1a, b'\n', 0]));
-        assert!(is_image(&[0xff, 0xd8, 0xff, 0xe0]));
-        assert!(is_image(b"GIF89a"));
-        assert!(is_image(b"RIFF\0\0\0\0WEBPVP8 "));
-        assert!(!is_image(b"RIFF\0\0\0\0WAVE"));
-        assert!(!is_image(b"<svg></svg>"));
-        assert!(!is_image(b""));
     }
 
     const W: &str = "_|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items.|_";

@@ -38,7 +38,6 @@ export const qk = {
   appUpdate: ["appUpdate"],
   dataDir: ["dataDir"],
   shutdown: ["shutdown"],
-  background: ["background"],
   network: ["network"],
   progress: ["progress"],
   robloxVersions: ["robloxVersions"],
@@ -116,21 +115,6 @@ const headshots = queryOptions({ queryKey: qk.headshots, queryFn: () => api.acco
 // A stable select: react-query reuses its result on re-render, so the find runs only when the list changes.
 export const useHeadshot = (accountId: number) =>
   useQuery({ ...headshots, select: useCallback((list: Headshot[]) => list.find((h) => h.accountId === accountId)?.url, [accountId]) }).data;
-
-// The one object URL for the picture (window and Settings thumbnail); a new picture revokes the old one.
-let bgUrl: string | null = null;
-/** The background picture as an object URL, null without one; invalidating qk.background reloads it. */
-export const useBackgroundUrl = (enabled = true) =>
-  useQuery({
-    queryKey: qk.background,
-    enabled,
-    queryFn: async () => {
-      const bytes = await api.backgroundGet();
-      if (bgUrl) URL.revokeObjectURL(bgUrl);
-      bgUrl = bytes.byteLength ? URL.createObjectURL(new Blob([bytes])) : null;
-      return bgUrl;
-    },
-  }).data ?? null;
 
 const byAccount = (list: AccountPresence[]) => new Map(list.map((p) => [p.accountId, p.presence]));
 /** Presence of the given (on-screen, valid) accounts, polled once a minute while a caller is

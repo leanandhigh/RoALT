@@ -22,8 +22,8 @@ export type Place =
   | { view: "updates"; group?: Key }
   | { view: Extract<View, "accounts" | "launch" | "dashboard">; link: true };
 
-/** What conditions and changing lines read. `background`: a background image is set. */
-export type Ctx = { s: Settings; vault: VaultStatus; background: boolean };
+/** What conditions and changing lines read. */
+export type Ctx = { s: Settings; vault: VaultStatus };
 export type Dyn = Key | ((c: Ctx) => Key);
 /** Words: a key, a key with values, or text no language changes ("MB", a language's own name). */
 export type Label = Key | { key: Key; params: Record<string, string | number> } | { text: string };
@@ -161,11 +161,6 @@ const SETTINGS_ENTRIES: readonly Entry[] = [
     control: { kind: "segmented", options: [{ value: "dark", label: "settings.themeDark" }, { value: "light", label: "settings.themeLight" }, { value: "system", label: "settings.themeSystem" }] },
   },
   { id: "accent", place: appearance, label: "settings.accentColour", hint: "settings.accentHint", field: "accent", control: CUSTOM, aliases: ["color", "colour", "highlight"] },
-  { id: "background", place: appearance, label: "settings.background", more: "settings.backgroundHint", control: CUSTOM, aliases: ["wallpaper", "picture", "image"] },
-  {
-    id: "backgroundDim", place: appearance, parent: "background", when: (c) => c.background, label: "settings.backgroundDim", field: "backgroundDim",
-    control: { kind: "segmented", mono: true, options: [40, 60, 80].map((n) => ({ value: n, label: { key: "settings.percent", params: { n } }, title: { key: "settings.backgroundCovers", params: { n } } })) },
-  },
   {
     id: "density", place: appearance, label: "settings.density", hint: "settings.densityHint", field: "density", aliases: ["compact", "rows"],
     control: { kind: "segmented", options: [{ value: "detailed", label: "settings.densityDetailed" }, { value: "compact", label: "settings.densityCompact" }] },

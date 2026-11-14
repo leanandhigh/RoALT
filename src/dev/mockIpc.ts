@@ -72,7 +72,7 @@ let accounts: AccountSummary[] = seed.map(([alias, displayName, username, userId
 }));
 
 let settings: Settings = {
-  theme: "dark", accent: "", backgroundDim: 60, density: "detailed", autoLockMinutes: 15, clipboardClearSeconds: 30, cacheMinutes: 10,
+  theme: "dark", accent: "", density: "detailed", autoLockMinutes: 15, clipboardClearSeconds: 30, cacheMinutes: 10,
   multiInstance: true, protectSharedLogin: true, launchDelayMs: 6000, autoRejoin: false, autoRestartOnCrash: false,
   breakerMax: 3, breakerWindowMin: 10, closeGraceS: 5, launchArgs: "", clientPath: "", executor: "", closeToTray: false,
   memRestartMb: 0, memThrottle: { mb: 0, cpuCap: 10 }, trimEveryMin: 0, autoSpread: false, fairCap: false,
@@ -109,7 +109,6 @@ let installing = false;
 /** Closes the mock sign-in window under way. */
 let cancelLogin: (() => void) | null = null;
 let shutdownAt: number | null = null;
-let background = new ArrayBuffer(0);
 const INSTALLING = "Roblox is being installed. Launch again once it is done.";
 let webhook: { id: string; token: string } | null = null;
 const WEBHOOK = /^https:\/\/(?:(?:ptb|canary)\.)?discord(?:app)?\.com\/api\/webhooks\/(\d{1,25})\/([A-Za-z0-9_-]{1,128})$/;
@@ -1583,26 +1582,6 @@ async function handle(cmd: string, args: Args): Promise<unknown> {
       logLine(({ error: 5, warn: 4, info: 3 } as Record<string, number>)[level] ?? 2, "ui", message);
       return null;
     }
-    case "background_set": {
-      // A generated picture stands in for the picked file.
-      const c = document.createElement("canvas");
-      c.width = 640;
-      c.height = 400;
-      const g = c.getContext("2d")!;
-      const grad = g.createLinearGradient(0, 0, 640, 400);
-      grad.addColorStop(0, "#2a1a5e");
-      grad.addColorStop(0.5, "#c2416b");
-      grad.addColorStop(1, "#f6a65a");
-      g.fillStyle = grad;
-      g.fillRect(0, 0, 640, 400);
-      background = await new Promise<Blob>((ok) => c.toBlob((b) => ok(b!), "image/png")).then((b) => b.arrayBuffer());
-      return null;
-    }
-    case "background_clear":
-      background = new ArrayBuffer(0);
-      return null;
-    case "background_get":
-      return background;
     case "browser_data_reset":
       await sleep(300);
       return true;

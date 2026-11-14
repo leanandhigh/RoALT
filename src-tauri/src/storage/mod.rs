@@ -58,8 +58,6 @@ pub struct FavouriteRow {
 
 /// Set once `Db::public_guard_off_once` has run.
 const PUBLIC_GUARD_OFF_ONCE: &str = "public_guard_default_v2";
-/// Set once `Db::background_cover_once` has run.
-const BACKGROUND_COVER_ONCE: &str = "background_cover_v2";
 const MAX_ALIAS: usize = 64;
 const MAX_NOTES: usize = 2000;
 const MAX_GROUP_NAME: usize = 40;
@@ -126,7 +124,7 @@ impl Db {
             })?;
         let db = Db { conn: Mutex::new(conn), file };
         db.public_guard_off_once()?;
-        db.background_cover_once()?;
+        db.drop_background()?;
         Ok(db)
     }
 
@@ -146,20 +144,12 @@ impl Db {
         self.set_setting_value(PUBLIC_GUARD_OFF_ONCE, Some("1"))
     }
 
-    /// The theme used to cover a background image by 70 to 90 %, which hid most pictures. A stored
-    /// value over today's default goes down to it once; choices made after that stay.
-    fn background_cover_once(&self) -> Result<()> {
-        if self.setting_value(BACKGROUND_COVER_ONCE)?.is_some() {
-            return Ok(());
+    /// The background image is no longer a feature: one stored by an older MTwin Manager goes.
+    fn drop_background(&self) -> Result<()> {
+        if self.setting_value("background")?.is_some() {
+            self.set_setting_value("background", None)?;
         }
-        let cover = Settings::default().background_dim;
-        if let Some(mut s) = self.setting_value("settings")?.and_then(|j| serde_json::from_str::<Settings>(&j).ok())
-            && s.background_dim > cover
-        {
-            s.background_dim = cover;
-            self.save_settings(&s)?;
-        }
-        self.set_setting_value(BACKGROUND_COVER_ONCE, Some("1"))
+        Ok(())
     }
 
     /// A consistent copy of the open database, written to `path` (compacted: no freed pages
@@ -1335,16 +1325,6 @@ mod tests {
         db2.public_guard_off_once().unwrap();
         assert!(!db2.settings().unwrap().allow_public_networks, "the user's later choice stays");
         assert!(Settings::default().allow_public_networks);
-
-        // The background's cover comes down once, and a later choice stays.
-        let heavy = Settings { background_dim: 90, ..Settings::default() };
-        db2.set_setting_value(BACKGROUND_COVER_ONCE, None).unwrap();
-        db2.save_settings(&heavy).unwrap();
-        db2.background_cover_once().unwrap();
-        assert_eq!(db2.settings().unwrap().background_dim, Settings::default().background_dim);
-        db2.save_settings(&heavy).unwrap();
-        db2.background_cover_once().unwrap();
-        assert_eq!(db2.settings().unwrap().background_dim, 90, "the user's later choice stays");
 
         // Values kept beside the settings leave them alone.
         assert_eq!(db.setting_value("discord_webhook").unwrap(), None);

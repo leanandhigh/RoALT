@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import type { Settings } from "../api";
-import { useBackgroundUrl } from "../data";
 import { prefersReducedMotion, setLiteUi } from "../ui/motion";
 import { writeStored } from "../ui/stored";
 
@@ -9,9 +8,6 @@ export const THEME_KEY = "mtwin.theme";
 /** The user's accent, read before first paint (and by the splash). */
 export const ACCENT_KEY = "mtwin.accent";
 
-/** Surfaces that turn see-through over a background image, and how much of them stays. Panels and
- * what floats keep most, so their text stays readable over any picture. */
-const SEE_THROUGH: Record<string, number> = { "--ground": 50, "--surface-1": 72, "--surface-2": 84, "--surface-3": 88, "--island": 86, "--float": 92 };
 
 /** MTwin Manager's crimson, the logo's: the accent while none is chosen ("" in Settings). */
 export const BRAND_ACCENT = "#e5243b";
@@ -36,10 +32,35 @@ const mix = (hex: string, toward: string, share: number) => {
   return `#${a.map((v, i) => Math.round(v + (b[i] - v) * share).toString(16).padStart(2, "0")).join("")}`;
 };
 
+/** Hue (degrees), saturation and lightness (0-1) of `#rrggbb`, and back. */
+function hsl(hex: string): [number, number, number] {
+  const [r, g, b] = rgb(hex).map((v) => v / 255);
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  const d = max - min;
+  if (!d) return [0, 0, l];
+  const s = d / (1 - Math.abs(2 * l - 1));
+  const h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return [(h * 60 + 360) % 360, s, l];
+}
+function fromHsl(h: number, s: number, l: number) {
+  const f = (n: number) => {
+    const k = (n + h / 30) % 12;
+    return l - s * Math.min(l, 1 - l) * Math.max(-1, Math.min(k - 3, 9 - k, 1));
+  };
+  return `#${[f(0), f(8), f(4)].map((v) => Math.round(v * 255).toString(16).padStart(2, "0")).join("")}`;
+}
+
 /** What a user accent becomes in one theme: the fill as chosen, the ink on it (whichever of near
  * black and white contrasts more), a text shade moved toward white on dark (black on light) until it
  * reads at 4.5:1 on the ground, and an edge when the fill alone is under 3:1 against the island. */
-export function accentTokens(hex: string, theme: "dark" | "light") {
+export function accentTokens(chosen: string, theme: "dark" | "light") {
+  // Too close to the ground to see (a near-black red on dark): lifted until it stands out at 3:1
+  // against the panels, so a switch that is on, a primary button or a picked chip still shows.
+  let hex = chosen;
+  const [h, sat, l] = hsl(chosen);
+  for (let d = 0.03; contrast(hex, ISLAND[theme]) < 3 && d <= 1; d += 0.03) hex = fromHsl(h, sat, Math.min(1, Math.max(0, theme === "dark" ? l + d : l - d)));
   // MTwin crimson takes white (4.6:1); any other accent, the better of the two.
   const ink = hex.toLowerCase() === BRAND_ACCENT ? "#ffffff" : contrast(hex, "#0a0a0a") >= contrast(hex, "#ffffff") ? "#0a0a0a" : "#ffffff";
   let text = hex;
@@ -60,15 +81,12 @@ export function applyAccent(hex: string, theme: "dark" | "light") {
 }
 
 /** Applies the theme to <html>: `data-theme` (dark or light, "system" follows Windows live), the
- * accent (`data-accent`), and the background image. A theme change cross-fades the whole window in
+ * accent (`data-accent`). A theme change cross-fades the whole window in
  * one snapshot. Returns whether it is dark. */
 export function useTheme(s: Settings | undefined) {
   const [dark, setDark] = useState(() => document.documentElement.dataset.theme !== "light");
   const theme = s?.theme;
   const accent = s?.accent ?? "";
-  // Less than this over a bright picture and no text stays readable.
-  const dim = Math.max(40, s?.backgroundDim ?? 60);
-  const image = useBackgroundUrl(!!s);
   const applied = useRef<string | null>(null);
   const lite = !!s?.liteUi;
   useEffect(() => setLiteUi(lite), [lite]);
@@ -82,17 +100,6 @@ export function useTheme(s: Settings | undefined) {
       root.dataset.theme = t;
       setDark(t !== "light");
       applyAccent(accent || BRAND_ACCENT, t);
-      // The window's colour covers the picture by `dim`; surfaces on top are partly see-through.
-      for (const v of Object.keys(SEE_THROUGH)) root.style.removeProperty(v);
-      if (image) {
-        const css = getComputedStyle(root);
-        root.style.setProperty("--bg-dim", `color-mix(in srgb, ${css.getPropertyValue("--ground").trim()} ${dim}%, transparent)`);
-        for (const [v, keep] of Object.entries(SEE_THROUGH)) root.style.setProperty(v, `color-mix(in srgb, ${css.getPropertyValue(v).trim()} ${keep}%, transparent)`);
-        root.style.setProperty("--bg-image", `url("${image}")`);
-        root.dataset.bg = "";
-      } else {
-        delete root.dataset.bg;
-      }
       writeStored(THEME_KEY, t);
       writeStored(ACCENT_KEY, accent || null);
     };
@@ -107,7 +114,7 @@ export function useTheme(s: Settings | undefined) {
     const onSystem = () => crossFade(apply);
     mq.addEventListener("change", onSystem);
     return () => mq.removeEventListener("change", onSystem);
-  }, [theme, accent, image, dim]);
+  }, [theme, accent]);
   return dark;
 }
 
