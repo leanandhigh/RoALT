@@ -184,6 +184,15 @@ farmDoneAt: boolean, farmDoneLevel: number,
  */
 closeWhenDone: boolean, 
 /**
+ * An account marked Done hands the farm to a spare, which joins the game it was in.
+ */
+replaceDone: boolean, 
+/**
+ * A farming account whose Progress reports stop for this many minutes is restarted into the
+ * place it last reported from; 0 = off.
+ */
+farmStallMin: number, 
+/**
  * The executor's own program, for the executor panel (`executor`); "": none.
  */
 executorExe: string, 

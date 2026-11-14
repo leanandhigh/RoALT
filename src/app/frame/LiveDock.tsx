@@ -8,6 +8,7 @@ import { Switch } from "../../ui/controls";
 import { Icon } from "../../ui/Icon";
 import { toast, toastError } from "../../ui/Toast";
 import { useStored } from "../../ui/stored";
+import { useMedia } from "../../ui/useMedia";
 import { accountName, Avatar } from "../../features/accounts/shared";
 import { isRunning, STATES, uptime, useNow } from "../../features/launch/Running";
 import { launchOne } from "../../features/launch/launchQueue";
@@ -15,7 +16,13 @@ import { launchOne } from "../../features/launch/launchQueue";
 /** Every running client, always in view: a column at the window's right edge. Each row shows the
  * account, where it is and for how long, and brings its window up or ends it. It folds to a strip. */
 export function LiveDock({ accounts }: { accounts: AccountSummary[] }) {
-  const [folded, setFolded] = useStored("mtwin.liveFolded", (v) => v === "1", (v) => (v ? "1" : "0"));
+  const [foldedWide, setFoldedWide] = useStored("mtwin.liveFolded", (v) => v === "1", (v) => (v ? "1" : "0"));
+  // A small window folds it to its strip, so the page keeps the room; opening it there lasts until
+  // the window is large again.
+  const narrow = useMedia("(max-width: 1180px)");
+  const [openNarrow, setOpenNarrow] = useState(false);
+  const folded = narrow ? !openNarrow : foldedWide;
+  const setFolded = (f: boolean) => (narrow ? setOpenNarrow(!f) : setFoldedWide(f));
   const running = (useInstances().data ?? []).filter(isRunning);
   const byId = new Map(accounts.map((a) => [a.id, a]));
   const now = useNow(10_000);

@@ -511,6 +511,7 @@ fn init(app: &TauriApp, data_dir: &Path, moved_from: Option<&Path>) -> std::resu
     }
     // Before anything else is started, so a newer MTwin Manager is offered as soon as possible.
     self_update::spawn(app.handle().clone());
+    farm::watch(app.handle().clone());
     app.manage(splash::Pending::default());
     let _ = LITE_UI.set(settings.lite_ui);
     main_window(app, data_dir, settings.skip_splash).map_err(|e| {

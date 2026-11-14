@@ -97,18 +97,24 @@
   }
   /* Never a scrolling bar: when the tabs don't fit, they drop their words (the name stays the
      tooltip), first Settings' and More's, then every tab's. */
-  @container tn (max-width: 980px) {
+  @container tn (max-width: 1240px) {
     .tn-settings > span,
     .tn-tab[popovertarget] > span {
       display: none;
     }
   }
-  @container tn (max-width: 760px) {
-    .tn-tab > span:not(.tn-count, .tn-badge) {
+  /* Then every tab but the one on screen keeps only its icon. */
+  @container tn (max-width: 1100px) {
+    .tn-tab:not([aria-current="page"]) > span:not(.tn-count, .tn-badge) {
       display: none;
     }
     .tn-tab {
       padding: 0 10px;
+    }
+  }
+  @container tn (max-width: 640px) {
+    .tn-tab > span:not(.tn-count, .tn-badge) {
+      display: none;
     }
   }
 

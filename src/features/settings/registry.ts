@@ -134,6 +134,11 @@ const SETTINGS_ENTRIES: readonly Entry[] = [
     control: { kind: "number", min: 1, max: 1000000, unit: "farm.levelUnit", short: "farm.levelShort" }, aliases: ["farm", "level"],
   },
   { id: "closeWhenDone", place: launching, label: "farm.closeWhenDone", hint: "farm.closeWhenDoneHint", field: "closeWhenDone", control: SWITCH, aliases: ["farm", "done", "close", "auto close"] },
+  { id: "replaceDone", place: launching, label: "farm.replaceDone", hint: "farm.replaceDoneHint", field: "replaceDone", control: SWITCH, aliases: ["farm", "done", "next", "spare", "replace", "progress"] },
+  {
+    id: "farmStall", place: launching, label: "farm.stall", hint: "farm.stallHint", field: "farmStallMin",
+    control: { kind: "offOrValue", min: 3, max: 240, on: 10, unit: "settings.unit.minutes", short: "settings.unit.min" }, aliases: ["farm", "stuck", "frozen", "restart", "progress", "rejoin"],
+  },
   { id: "autoRejoin", place: launching, label: "settings.autoRejoin", hint: "settings.autoRejoinHint", field: "autoRejoin", control: SWITCH, aliases: ["reconnect", "disconnect", "kick"] },
   { id: "autoRestart", place: launching, label: "settings.autoRestart", hint: "settings.autoRestartShort", more: "settings.autoRestartHint", field: "autoRestartOnCrash", control: SWITCH, aliases: ["crash", "hang", "relaunch"] },
   { id: "breaker", place: launching, label: "settings.breaker", more: "settings.breakerHint", field: ["breakerMax", "breakerWindowMin"], control: CUSTOM, aliases: ["breaker", "retries", "tries"] },

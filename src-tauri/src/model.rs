@@ -362,6 +362,11 @@ pub struct Settings {
     pub farm_done_level: u32,
     /// An account marked Done (by hand or by level) has its clients closed.
     pub close_when_done: bool,
+    /// An account marked Done hands the farm to a spare, which joins the game it was in.
+    pub replace_done: bool,
+    /// A farming account whose Progress reports stop for this many minutes is restarted into the
+    /// place it last reported from; 0 = off.
+    pub farm_stall_min: u32,
     /// System-wide key combination for Kill all, like "Ctrl+Shift+F12"; "" for none.
     pub panic_hotkey: String,
     /// Delete old or huge Roblox client logs at start and every hour (`logwatch::clean`).
@@ -614,6 +619,8 @@ impl Default for Settings {
             farm_done_at: false,
             farm_done_level: 100,
             close_when_done: false,
+            replace_done: false,
+            farm_stall_min: 0,
 panic_hotkey: String::new(),
             clean_logs: false,
             fps_cap: 0,
@@ -728,6 +735,10 @@ pub struct SettingsPatch {
     pub farm_done_level: Option<u32>,
     #[ts(optional)]
     pub close_when_done: Option<bool>,
+    #[ts(optional)]
+    pub replace_done: Option<bool>,
+    #[ts(optional)]
+    pub farm_stall_min: Option<u32>,
     #[ts(optional)]
     pub panic_hotkey: Option<String>,
     #[ts(optional)]

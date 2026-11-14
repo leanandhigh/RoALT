@@ -6,13 +6,10 @@ import type { BrowseRequest } from "../../app/navigation";
 import { useSettings } from "../../data";
 import { t, type Key } from "../../i18n";
 import { Button, IconButton } from "../../ui/Button";
-import { Segmented } from "../../ui/controls";
-import { Input, Select } from "../../ui/Field";
-import type { IconName } from "../../ui/Icon";
+import { Icon, type IconName } from "../../ui/Icon";
 import { readStored, writeStored } from "../../ui/stored";
-import { Tabs } from "../../ui/Tabs";
 import { toast, toastError } from "../../ui/Toast";
-import { accountName, Avatar } from "../accounts/shared";
+import { AccountSwitch } from "./AccountSwitch";
 import { launchOne, launchStep } from "../launch/launchQueue";
 import { useMoveConfirm } from "../launch/MoveDialog";
 import { useGameDetails } from "./GameDetails";
@@ -154,26 +151,53 @@ export function BrowseView({ accounts, ask }: { accounts: AccountSummary[]; ask:
     );
 
   return (
-    <main className="flex-1 min-w-0 min-h-0 flex flex-col browse">
-      <div className="browse-bar">
-        <span className="flex items-center gap-2 min-w-0">
-          <Avatar account={account} size={28} />
-          <Select
-            aria-label={t("browse.as")}
-            className="browse-account"
-            value={String(account.id)}
-            onChange={(v) => {
-              setAccountId(Number(v));
-              go("home");
-            }}
-            options={accounts.map((a) => ({ value: String(a.id), label: accountName(a) }))}
-          />
-        </span>
-        <span className="flex items-center gap-1">
-          <IconButton icon="back" label={t("browse.back")} data-tip-side="top" onClick={() => nav("back")} />
-          <IconButton icon="back" className="browse-forward" label={t("browse.forward")} data-tip-side="top" onClick={() => nav("forward")} />
-          <IconButton icon="refresh" label={t("browse.reload")} data-tip-side="top" onClick={() => nav("reload")} />
-          {/* Labelled, not an icon alone: what this page offers should be seen. */}
+    <main className="flex-1 min-w-0 min-h-0 bx">
+      {/* The rail: who browses, Roblox's pages, MTwin Manager's own lists, search. Icons only when narrow. */}
+      <aside className="bx-rail">
+        <AccountSwitch
+          accounts={accounts}
+          value={account}
+          onChange={(id) => {
+            setAccountId(id);
+            go("home");
+          }}
+        />
+        <nav className="bx-nav" aria-label={t("browse.pages")}>
+          <p className="bx-label">{t("browse.roblox")}</p>
+          {PAGES.map((p) => (
+            <RailItem key={p.id} icon={p.icon} label={t(p.label)} on={!native && tabOf(shown) === p.id} onClick={() => go(p.path)} />
+          ))}
+          <p className="bx-label">{t("browse.mtwin")}</p>
+          <RailItem icon="bolt" label={t("browse.tab.popular")} on={native === "popular"} onClick={() => setNative("popular")} />
+          <RailItem icon="clock" label={t("browse.tab.playtime")} on={native === "playtime"} onClick={() => setNative("playtime")} />
+        </nav>
+      </aside>
+
+      <section className="bx-main">
+        <div className="bx-bar">
+          <span className="bx-navbtns">
+            <IconButton icon="back" label={t("browse.back")} data-tip-side="bottom" onClick={() => nav("back")} />
+            <IconButton icon="back" className="browse-forward" label={t("browse.forward")} data-tip-side="bottom" onClick={() => nav("forward")} />
+            <IconButton icon="refresh" label={t("browse.reload")} data-tip-side="bottom" onClick={() => nav("reload")} />
+          </span>
+          <form className="bx-search" onSubmit={search}>
+            <Icon name="search" size={14} className="bx-search-icon" />
+            <input
+              data-find
+              className="bx-search-input"
+              aria-label={t("browse.search")}
+              placeholder={native ? t("browse.search") : `roblox.com/${shown}`}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+            <span className="bx-kind" role="radiogroup" aria-label={t("browse.searchFor")}>
+              {(["people", "games"] as const).map((k) => (
+                <button key={k} type="button" role="radio" aria-checked={kind === k} onClick={() => setKind(k)}>
+                  {t(k === "people" ? "browse.people" : "browse.games")}
+                </button>
+              ))}
+            </span>
+          </form>
           {gamePage && (
             <Button size="sm" variant="ghost" icon="info" onClick={() => details.open(gamePage)}>
               {t("game.detailsTip")}
@@ -184,46 +208,33 @@ export function BrowseView({ accounts, ask }: { accounts: AccountSummary[]; ask:
               {t("player.detailsTip")}
             </Button>
           )}
-        </span>
-        <Tabs
-          label={t("browse.pages")}
-          value={native ?? tabOf(shown)}
-          onChange={(id) => (id === "popular" || id === "playtime" ? setNative(id) : go(PAGES.find((p) => p.id === id)!.path))}
-          items={[
-            ...PAGES.map((p) => ({ value: p.id, label: t(p.label), icon: p.icon })),
-            { value: "popular", label: t("browse.tab.popular"), icon: "bolt" as const },
-            { value: "playtime", label: t("browse.tab.playtime"), icon: "clock" as const },
-          ]}
-        />
-        <form className="browse-search" onSubmit={search}>
-          <Segmented
-            label={t("browse.searchFor")}
-            value={kind}
-            onChange={setKind}
-            options={[
-              { value: "people", label: t("browse.people") },
-              { value: "games", label: t("browse.games") },
-            ]}
-          />
-          <Input data-find leading="search" aria-label={t("browse.search")} placeholder={t("browse.search")} value={query} onChange={(e) => setQuery(e.target.value)} />
-        </form>
-      </div>
-      {error && !native && <p role="alert" className="alert px-1 pb-2">{error}</p>}
-      <div className="browse-stage">
-        <RobloxPane accountId={account.id} path={page.path} n={page.n} hidden={!!native} resume={lastPath} onError={setError} />
-        {native && (
-          <div className="browse-native scroll">
-            {native === "popular" ? (
-              <PopularTab onOpen={open} onPlay={playPlace} onDetails={details.open} />
-            ) : (
-              <PlaytimeTab accounts={accounts} onOpen={open} onPlay={playPlace} onDetails={details.open} />
-            )}
-          </div>
-        )}
-      </div>
+        </div>
+        {error && !native && <p role="alert" className="alert">{error}</p>}
+        <div className="browse-stage">
+          <RobloxPane accountId={account.id} path={page.path} n={page.n} hidden={!!native} resume={lastPath} onError={setError} />
+          {native && (
+            <div className="browse-native scroll">
+              {native === "popular" ? (
+                <PopularTab onOpen={open} onPlay={playPlace} onDetails={details.open} />
+              ) : (
+                <PlaytimeTab accounts={accounts} onOpen={open} onPlay={playPlace} onDetails={details.open} />
+              )}
+            </div>
+          )}
+        </div>
+      </section>
       {move.dialog}
       {details.dialog}
       {player.dialog}
     </main>
+  );
+}
+
+function RailItem({ icon, label, on, onClick }: { icon: IconName; label: string; on: boolean; onClick: () => void }) {
+  return (
+    <button type="button" className="bx-item" aria-current={on ? "page" : undefined} aria-label={label} data-tip={label} data-tip-side="right" onClick={onClick}>
+      <Icon name={icon} size={16} />
+      <span>{label}</span>
+    </button>
   );
 }

@@ -1,29 +1,254 @@
 @layer components {
-  .browse {
-    padding: 12px 16px 16px;
-    gap: 10px;
-  }
-  /* One line while it fits: account, page buttons, tabs, then the search taking what is left. */
-  .browse-bar {
+  /* Browse: a rail on the left (who, where), the page on the right under a slim bar. */
+  .bx {
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 10px 14px;
+    min-height: 0;
   }
-  .browse-account {
+  .bx-rail {
+    flex: none;
+    width: 228px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 14px 12px;
+    border-inline-end: 1px solid var(--line);
+    overflow-y: auto;
+  }
+  .bx-who {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 8px 10px 8px 8px;
+    border: 0;
+    border-radius: var(--r-md);
+    background: var(--surface-1);
+    box-shadow: inset 0 0 0 1px var(--line);
+    text-align: start;
+  }
+  .bx-who:hover {
+    background: var(--surface-2);
+  }
+  .bx-who-text {
+    display: flex;
+    flex-direction: column;
     min-width: 0;
-    max-width: 220px;
+    flex: 1;
+    line-height: 1.25;
+  }
+  .bx-who-text b,
+  .bx-who-text span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .bx-who-text b {
+    font-weight: 600;
+    font-size: 13.5px;
+  }
+  .bx-who-text span {
+    color: var(--fg-3);
+    font-size: 12px;
+  }
+  .bx-who-chev {
+    color: var(--fg-3);
+    flex: none;
+  }
+  .bx-accounts {
+    width: 260px;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .bx-accounts-list {
+    max-height: 340px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .bx-acc {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 8px;
+    border: 0;
+    border-radius: var(--r-sm);
+    background: none;
+    text-align: start;
+  }
+  .bx-acc:hover,
+  .bx-acc:focus-visible {
+    background: var(--surface-2);
+  }
+  .bx-acc[aria-selected="true"] {
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+  }
+  .bx-acc-on {
+    color: var(--accent-text);
+    flex: none;
+  }
+  .bx-acc-warn {
+    color: var(--attention, #f0a33a);
+    flex: none;
+  }
+  .bx-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .bx-label {
+    margin: 10px 10px 4px;
+    font-size: 11px;
+    font-weight: 650;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fg-3);
+  }
+  .bx-label:first-child {
+    margin-top: 0;
+  }
+  .bx-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 36px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: var(--r-sm);
+    background: none;
+    color: var(--fg-2);
+    font-weight: 550;
+    text-align: start;
+  }
+  .bx-item:hover {
+    background: var(--surface-1);
+    color: var(--fg);
+  }
+  .bx-item[aria-current="page"] {
+    background: var(--surface-2);
+    color: var(--fg);
+    box-shadow: inset 2px 0 0 var(--accent);
+  }
+  .bx-item span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .bx-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 14px 14px;
+  }
+  .bx-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .bx-navbtns {
+    display: flex;
+    gap: 2px;
   }
   .browse-forward svg {
     transform: scaleX(-1);
   }
-  .browse-search {
+  /* The address and the search in one: shows where the page is, searches when typed into. */
+  .bx-search {
+    position: relative;
+    flex: 1;
+    min-width: 0;
     display: flex;
     align-items: center;
-    gap: 8px;
-    flex: 1 1 260px;
-    min-width: 0;
+    height: 36px;
+    border-radius: 999px;
+    background: var(--surface-1);
+    box-shadow: inset 0 0 0 1px var(--line);
   }
+  .bx-search:focus-within {
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 70%, transparent);
+  }
+  .bx-search-icon {
+    position: absolute;
+    inset-inline-start: 13px;
+    color: var(--fg-3);
+  }
+  .bx-search-input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    padding: 0 8px 0 36px;
+    border: 0;
+    background: none;
+    outline: none;
+  }
+  .bx-search-input::placeholder {
+    color: var(--fg-3);
+    font-family: var(--font-code);
+    font-size: 12.5px;
+  }
+  .bx-kind {
+    display: flex;
+    gap: 2px;
+    margin-inline-end: 4px;
+    padding: 2px;
+    border-radius: 999px;
+    background: var(--surface-2);
+  }
+  .bx-kind button {
+    height: 26px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 999px;
+    background: none;
+    color: var(--fg-3);
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .bx-kind button[aria-checked="true"] {
+    background: var(--surface-3);
+    color: var(--fg);
+  }
+  /* A small window: the rail keeps its icons only. */
+  @media (max-width: 1100px) {
+    .bx-rail {
+      width: 62px;
+      padding: 12px 8px;
+      align-items: center;
+    }
+    .bx-who {
+      padding: 4px;
+      width: auto;
+      background: none;
+      box-shadow: none;
+    }
+    .bx-who .bx-who-text,
+    .bx-who .bx-who-chev,
+    .bx-label,
+    .bx-item span {
+      display: none;
+    }
+    .bx-item {
+      width: 40px;
+      justify-content: center;
+      padding: 0;
+    }
+    .bx-nav {
+      gap: 4px;
+      align-items: center;
+    }
+    .bx-nav .bx-label + .bx-item {
+      margin-top: 0;
+    }
+  }
+  @media (max-width: 700px) {
+    .bx-kind {
+      display: none;
+    }
+  }
+
   /* Roblox's page (in its box) and MTwin Manager's own tabs over it share this place. */
   .browse-stage {
     position: relative;
@@ -36,7 +261,9 @@
     flex: 1;
     min-height: 0;
     background: var(--surface-1);
-    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    overflow: hidden;
+    box-shadow: inset 0 0 0 1px var(--line);
   }
   .browse-native {
     position: absolute;

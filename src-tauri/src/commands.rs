@@ -3434,6 +3434,13 @@ pub fn settings_set(app: AppHandle, s: State<'_, App>, patch: SettingsPatch) -> 
         v.farm_done_level = l;
     }
     if let Some(b) = patch.close_when_done { v.close_when_done = b }
+    if let Some(b) = patch.replace_done { v.replace_done = b }
+    if let Some(m) = patch.farm_stall_min {
+        if m > 0 && !(3..=240).contains(&m) {
+            return Err(AppError::Invalid(tr!("Restart after 3 to 240 minutes without a report.")));
+        }
+        v.farm_stall_min = m;
+    }
     if let Some(t) = patch.theme { v.theme = t }
     if let Some(l) = &patch.language {
         if !(l.is_empty() || crate::i18n::LANGS.contains(&l.as_str())) {

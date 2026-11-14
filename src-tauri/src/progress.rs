@@ -371,6 +371,18 @@ impl Progress {
     }
 
     /// What the website shows (no scripts, no catalog): the accounts, by game then name.
+    /// Each reporting user's newest report: (user id, unix ms, the place it was in).
+    pub fn last_reports(&self) -> Vec<(i64, i64, Option<i64>)> {
+        let mut out: std::collections::HashMap<i64, (i64, Option<i64>)> = std::collections::HashMap::new();
+        for a in self.stored().accounts.values() {
+            let e = out.entry(a.user_id).or_insert((a.last_seen, a.place_id));
+            if a.last_seen >= e.0 {
+                *e = (a.last_seen, a.place_id.or(e.1));
+            }
+        }
+        out.into_iter().map(|(u, (at, place))| (u, at, place)).collect()
+    }
+
     fn web_json(&self) -> String {
         let s = self.stored();
         let heads = self.heads.lock().unwrap_or_else(|e| e.into_inner());

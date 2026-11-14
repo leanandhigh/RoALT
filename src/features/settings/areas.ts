@@ -18,7 +18,7 @@ export const AREAS: readonly AreaDef[] = [
       { label: "settings.group.recovery", ids: ["autoRejoin", "autoRestart", "breaker", "antiAfk"] },
       { label: "settings.group.play", ids: ["windowLayout", "playFps", "sameServer"] },
       { label: "settings.group.perAccount", ids: ["perAccount"] },
-      { label: "farm.settings", ids: ["replaceDead", "replaceChallenged", "farmDoneAt", "closeWhenDone"] },
+      { label: "farm.settings", ids: ["replaceDead", "replaceChallenged", "farmStall", "farmDoneAt", "closeWhenDone", "replaceDone"] },
       { label: "settings.group.stopping", ids: ["panic", "closeGrace", "shutdown"] },
     ],
   },
