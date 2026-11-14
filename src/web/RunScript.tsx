@@ -97,7 +97,7 @@ export function RunScript({ open, onClose, token }: { open: boolean; onClose: ()
 
   return (
     <Dialog open={open} onClose={onClose} title="Run a script" width={980}>
-      <div className="rs">
+      <div className="rs dlg-body">
         <aside className="rs-side">
           <div className="rs-side-head">
             <b>Clients</b>
@@ -105,7 +105,9 @@ export function RunScript({ open, onClose, token }: { open: boolean; onClose: ()
               {picked.length} of {onlineCount} online
             </span>
           </div>
-          <Input leading="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Find an account" aria-label="Find an account" />
+          <div>
+            <Input leading="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Find an account" aria-label="Find an account" />
+          </div>
           <div className="rs-quick">
             <button type="button" className="linkbtn" onClick={() => setOff(new Set())}>
               All online

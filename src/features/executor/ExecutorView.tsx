@@ -227,7 +227,7 @@ function ScriptEditor({ value, onClose, onSaved }: {
   };
   return (
     <Dialog open={value !== null} onClose={onClose} title={value?.isNew ? t("executor.newScript") : t("executor.edit")} width={820}>
-      <div className="ex-editor">
+      <div className="ex-editor dlg-body">
         {value?.isNew && (
           <Input leading="file" value={name} onChange={(e) => setName(e.target.value)} placeholder="autofarm.lua" aria-label={t("executor.fileName")} autoFocus />
         )}

@@ -48,6 +48,12 @@
     padding-right: 18px;
     border-right: 1px solid var(--line);
   }
+  .rs-side > * {
+    flex: none;
+  }
+  .rs-side > .rs-list {
+    flex: 1;
+  }
   .rs-side-head {
     display: flex;
     align-items: baseline;
