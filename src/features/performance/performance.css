@@ -20,54 +20,27 @@
     gap: 16px;
     margin-bottom: 40px;
   }
+  /* The presets: one dropdown, the chosen one described under it. */
   .perf-presets {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
-    gap: 16px;
-  }
-  .preset {
-    width: 100%;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: flex-start;
-    gap: 10px;
-    padding: 18px;
-    border-radius: var(--r-lg);
-    background: var(--surface-1);
-    text-align: start;
-    white-space: normal;
-  }
-  .preset:hover:not(:disabled) {
-    background: var(--surface-2);
-  }
-  /* The applied preset. Not aria-pressed: pressing a card opens its review, it toggles nothing. */
-  .preset[data-active] {
-    background: var(--surface-2);
-    /* An inset selection ring (as .pick), not depth; it keeps clear of the focus outline. */
-    box-shadow: inset 0 0 0 1.5px var(--accent-text); /* taste-skill-ignore */
-  }
-  .preset[data-active] .tick {
-    background: var(--accent);
-    color: var(--on-accent);
-    box-shadow: inset 0 0 0 1px var(--accent-ring); /* taste-skill-ignore: the tick's ring, as controls.css */
-  }
-  @media (forced-colors: active) {
-    .preset[data-active] {
-      border: 2px solid Highlight;
-    }
-  }
-  .perf-preset-head {
     display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px 18px;
+  }
+  .perf-preset-row {
+    display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    width: 100%;
+  }
+  .perf-preset-row .select-trigger {
+    min-width: 200px;
   }
   .perf-preset-facts {
-    display: grid;
-    gap: 4px;
-    font-size: var(--fs-small);
-    font-weight: 400;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
   }
 
   /* For this PC. */
@@ -245,11 +218,6 @@
       flex-direction: column;
       gap: 10px;
       max-width: none !important;
-    }
-    .perf-page > .perf-top .perf-presets {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
     }
     .perf-page > :not(header, .perf-top) {
       grid-column: 2;

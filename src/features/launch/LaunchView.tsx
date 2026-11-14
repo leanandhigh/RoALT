@@ -2,18 +2,17 @@ import { useEffect, useLayoutEffect, useRef, useState, type Dispatch, type RefOb
 import { flushSync } from "react-dom";
 import { type AccountSummary, type Favourite, type JoinCandidate, type SameServer } from "../../api";
 import { publicBlock, useBulk, useFavourites, useInstances, useMultiStatus, useNetwork, useRobloxClient, useSettings } from "../../data";
-import { fmtNum, t } from "../../i18n";
+import { t } from "../../i18n";
 import { announce, overlayOpen } from "../../ui/a11y";
 import { Button, IconButton } from "../../ui/Button";
 import { Icon } from "../../ui/Icon";
 import { Collapse, Morph } from "../../ui/motion";
-import { requestNavigation } from "../../app/navigation";
 import { accountName, Avatar } from "../accounts/shared";
 import { AccountPicker } from "./AccountPicker";
 import { FavouriteDialog, FavouritesRow } from "./Favourites";
 import { JoinDialog } from "./JoinDialog";
 import { LaunchButton } from "./LaunchButton";
-import { launchBlocked, launchOne, launchSame, launchStep, sessionFps, useLaunchActivity, useSessionFps } from "./launchQueue";
+import { launchBlocked, launchOne, launchSame, launchStep, sessionFps, useLaunchActivity } from "./launchQueue";
 import { LaunchProgress } from "./LaunchProgress";
 import { MultiNotice } from "./MultiNotice";
 import { useMoveConfirm } from "./MoveDialog";
@@ -40,8 +39,6 @@ function useWide(ref: RefObject<HTMLElement | null>) {
   return wide;
 }
 
-type Chip = { key: string; text: string; edit?: string };
-
 /** Play: who plays (left), where and the launch (right). Two columns when there is room, else stacked. */
 export function LaunchView({ accounts, picked, setPicked, sameServer, draft, setDraft, onAdd, onPickFavourite, onClose, embedded }: {
   accounts: AccountSummary[];
@@ -64,8 +61,6 @@ export function LaunchView({ accounts, picked, setPicked, sameServer, draft, set
   const client = useRobloxClient().data;
   const settings = useSettings().data;
   const network = useNetwork().data;
-  const delayMs = settings?.launchDelayMs ?? 6000;
-  const layout = settings?.windowLayout ?? "off";
   const activity = useLaunchActivity();
   const [joinOpen, setJoinOpen] = useState(false);
   const [saveOpen, setSaveOpen] = useState(false);
@@ -165,21 +160,6 @@ export function LaunchView({ accounts, picked, setPicked, sameServer, draft, set
     );
   };
 
-  // What this launch will do, each chip a way to the option it reads.
-  const layoutOn = layout !== "off" && (bulk || !account?.fullQuality);
-  const [fps] = useSessionFps();
-  const together = sameServer === "pickFirst" || sameServer === "followFirst";
-  const spread = sameServer !== "off" && !together;
-  const chips = [
-    usableTarget && look ? { key: "target", text: `${look.kind} · ${look.detail}`, edit: "#launch-target" } : null,
-    bulk ? { key: "delay", text: t("play.apart", { s: fmtNum(delayMs / 1000) }) } : null,
-    fps > 0 ? { key: "fps", text: t("dashboard.fps", { fps }) } : null,
-    bulk && together ? { key: "same", text: t("launch.sameServer") } : null,
-    bulk && spread ? { key: "spread", text: t("launch.spread") } : null,
-    layoutOn ? { key: "layout", text: `${t("launch.layout")} · ${t(layout === "fit" ? "launch.layoutFit" : "launch.layoutTiny")}` } : null,
-    settings?.lowGraphics && !account?.fullQuality ? { key: "low", text: t("settings.lowGraphics") } : null,
-  ].filter((c): c is Chip => c !== null);
-  const edit = (selector: string) => document.querySelector<HTMLElement>(selector)?.focus();
   const names = chosen.slice(0, 2).map(accountName).join(", ") + (chosen.length > 2 ? ` +${chosen.length - 2}` : "");
 
   return (
@@ -249,20 +229,6 @@ export function LaunchView({ accounts, picked, setPicked, sameServer, draft, set
                 ))}
               </span>
               <span className="pl-dock-who">{chosen.length ? names : t("play.pickFirst")}</span>
-              <div className="pl-dock-chips">
-                {chips.map((c) =>
-                  c.edit ? (
-                    <button key={c.key} type="button" className="chip chip-sm" onClick={() => edit(c.edit!)}>
-                      <span className="truncate">{c.text}</span>
-                    </button>
-                  ) : (
-                    <span key={c.key} className="tag min-h-[var(--h-sm)] px-2.5"><span className="truncate">{c.text}</span></span>
-                  ),
-                )}
-                <button type="button" className="linkbtn text-[12.5px]" onClick={() => requestNavigation("settings", "launching")}>
-                  {t("play.optionsOpen")}
-                </button>
-              </div>
             </div>
             {/* Whatever stands in the launch's way, with the way out, right above the button. */}
             <Morph axis="height">

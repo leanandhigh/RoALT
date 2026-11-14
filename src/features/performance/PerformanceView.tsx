@@ -1,14 +1,13 @@
 import "./performance.css";
-import { useRef, useState } from "react";
-import { motion } from "motion/react";
+import { useRef, useState, type RefObject } from "react";
 import type { Profile } from "../../api";
 import type { Limits } from "../../bindings/Limits";
 import { useAccounts, useSetSettings, useSettings } from "../../data";
-import { fmtNum, t, type Key } from "../../i18n";
+import { t, type Key } from "../../i18n";
 import { Button } from "../../ui/Button";
 import { NumberField, Segmented, Switch } from "../../ui/controls";
-import { Icon } from "../../ui/Icon";
-import { Collapse, Morph, SPRING, Swap, TWEEN } from "../../ui/motion";
+import { Select } from "../../ui/Field";
+import { Collapse, Morph, Swap } from "../../ui/motion";
 import { StatusPill } from "../../ui/Status";
 import { PREVIEW_FPS, usePreviewFps } from "../dashboard/previewFps";
 import { useJumpTarget } from "../settings/jump";
@@ -20,7 +19,7 @@ import { PERFORMANCE_ENTRIES } from "./entries";
 import { benchApplied, ForThisPc } from "./ForThisPc";
 import { FpsRow } from "./FpsControl";
 import { FlagsDialog } from "./FlagsDialog";
-import { FACTS_SHOWN, isApplied, named, ownCaps, PRESETS, type Preset } from "./presets";
+import { isApplied, named, ownCaps, PRESETS, type Preset } from "./presets";
 import { ReviewDialog } from "./ReviewDialog";
 import { ShareRow } from "./ShareRow";
 
@@ -155,39 +154,52 @@ const GROUPS = (["performance.fineTune", "performance.section.cpuMemory", "perfo
   ids: PERFORMANCE_ENTRIES.filter((e) => "group" in e.place && e.place.group === group && !e.parent).map((e) => e.id),
 }));
 
-function PresetCard({ preset: p, active, onPick }: { preset: Preset; active: boolean; onPick: () => void }) {
-  const ref = useRef<HTMLButtonElement>(null);
-  useJumpTarget(p.id, ref);
-  const facts = p.facts();
-  const rest = facts.length - FACTS_SHOWN;
+/** Search can jump to a preset: each lands on the preset picker. */
+function PresetJump({ id, target }: { id: string; target: RefObject<HTMLElement | null> }) {
+  useJumpTarget(id, target);
+  return null;
+}
+
+/** The presets as one dropdown; the one in use (or the one about to be reviewed) is described below
+ * it. Picking one opens its review, as before. */
+function PresetPicker({ active, onPick }: { active: Preset | undefined; onPick: (p: Preset) => void }) {
+  const ref = useRef<HTMLElement>(null);
+  useJumpTarget("presets", ref);
+  const shown = active ?? null;
+  const facts = shown?.facts() ?? [];
   return (
-    <button ref={ref} type="button" className="btn preset" data-active={active || undefined} aria-haspopup="dialog" onClick={onPick}>
-      <span className="perf-preset-head">
-        <span className="section-title">
-          {t(p.label)}
-          {active && <span className="sr-only"> {t("performance.inUse")}</span>}
-        </span>
-        <span aria-hidden="true" className="tick tick-round">
-          {/* Applied, the check pops into its tile; it leaves faster. */}
-          <motion.span className="grid" initial={false} animate={active ? { scale: 1, opacity: 1 } : { scale: 0.4, opacity: 0 }} transition={active ? SPRING.snappy : TWEEN.exit}>
-            <Icon name="check" size={14} />
-          </motion.span>
-        </span>
-      </span>
-      <span className="text-fg-2">{t(p.tag)}</span>
-      <span className="perf-preset-facts">
-        {facts.slice(0, FACTS_SHOWN).map((f) => (
-          <span key={f}>{f}</span>
-        ))}
-        {rest > 0 && (
-          <>
-            {/* The rest are in the review. */}
-            <span aria-hidden="true" className="text-fg-3">+{fmtNum(rest)}</span>
-            <span className="sr-only">{facts.slice(FACTS_SHOWN).join(". ")}</span>
-          </>
-        )}
-      </span>
-    </button>
+    <section ref={ref} aria-label={t("performance.presets")} className="perf-presets panel">
+      {PRESETS.map((p) => (
+        <PresetJump key={p.id} id={p.id} target={ref} />
+      ))}
+      <div className="perf-preset-row">
+        <span className="section-title">{t("performance.presets")}</span>
+        <Select
+          aria-label={t("performance.presets")}
+          value={shown?.id ?? "custom"}
+          options={[
+            ...(shown ? [] : [{ value: "custom", label: t("performance.custom") }]),
+            ...PRESETS.map((p) => ({ value: p.id, label: t(p.label) })),
+          ]}
+          onChange={(id) => {
+            const p = PRESETS.find((x) => x.id === id);
+            if (p) onPick(p);
+          }}
+        />
+      </div>
+      {shown ? (
+        <>
+          <p className="text-fg-2">{t(shown.tag)}</p>
+          <div className="perf-preset-facts">
+            {facts.map((f) => (
+              <span key={f} className="tag">{f}</span>
+            ))}
+          </div>
+        </>
+      ) : (
+        <p className="text-fg-3">{t("performance.pickPreset")}</p>
+      )}
+    </section>
   );
 }
 
@@ -202,8 +214,6 @@ export function PerformanceView() {
   const [picked, setPicked] = useState<Profile | null>(null);
   // Enter held on Apply lands on what opened the review: it must not open it again.
   const closedAt = useRef(0);
-  const presets = useRef<HTMLElement>(null);
-  useJumpTarget("presets", presets);
   const open = (profile: Profile, facts?: string[]) => Date.now() - closedAt.current > 400 && setReview({ profile, facts });
 
   // An account's own cap beats a preset's, so it isn't what those clients get.
@@ -228,11 +238,7 @@ export function PerformanceView() {
         </header>
 
         <div className="perf-top">
-          <section ref={presets} aria-label={t("performance.presets")} className="perf-presets">
-            {PRESETS.map((p) => (
-              <PresetCard key={p.id} preset={p} active={p === active} onPick={() => open(p.profile)} />
-            ))}
-          </section>
+          <PresetPicker active={PRESETS.find((p) => p === active)} onPick={(p) => open(p.profile)} />
           <ForThisPc
             settings={settings}
             previewFps={previewFps}

@@ -1,0 +1,82 @@
+@layer components {
+  /* The well: the colour itself, its code on it. */
+  .cp-well {
+    position: relative;
+    display: inline-flex;
+    align-items: flex-end;
+    justify-content: flex-start;
+    width: 132px;
+    height: 36px;
+    padding: 0 8px 5px;
+    border-radius: var(--r-sm);
+    border: 0;
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14), inset 0 0 0 2px rgb(0 0 0 / 0.25);
+  }
+  .cp-code {
+    font-size: 11px;
+    font-weight: 600;
+    color: #fff;
+    text-shadow: 0 1px 2px rgb(0 0 0 / 0.6);
+  }
+  .cp-pop {
+    width: 240px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .cp-area {
+    position: relative;
+    height: 150px;
+    border-radius: var(--r-sm);
+    background-image: linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, transparent) !important;
+    cursor: crosshair;
+    touch-action: none;
+    outline-offset: 2px;
+  }
+  .cp-dot {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    margin: -8px 0 0 -8px;
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px #fff, 0 1px 4px rgb(0 0 0 / 0.5);
+    pointer-events: none;
+  }
+  .cp-hue {
+    position: relative;
+    height: 12px;
+    border-radius: 999px;
+    background: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+    cursor: pointer;
+    touch-action: none;
+    outline-offset: 2px;
+  }
+  .cp-knob {
+    position: absolute;
+    top: 50%;
+    width: 16px;
+    height: 16px;
+    margin: -8px 0 0 -8px;
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px #fff, 0 1px 4px rgb(0 0 0 / 0.5);
+    pointer-events: none;
+  }
+  .cp-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .cp-chip {
+    width: 34px;
+    height: 34px;
+    flex: none;
+    border-radius: var(--r-sm);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14);
+  }
+  .cp-hex {
+    flex: 1;
+    min-width: 0;
+    text-transform: uppercase;
+  }
+}

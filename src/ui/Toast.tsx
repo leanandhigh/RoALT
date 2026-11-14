@@ -61,7 +61,7 @@ export function friendly(e: ErrorPayload): string {
   return k ? t(k) : e.message || t("ui.error.generic");
 }
 
-/** Error toast; a cancelled action (closed window, dismissed Windows Hello) stays quiet. */
+/** Error toast; a cancelled action (closed window, dismissed prompt) stays quiet. */
 export function toastError(e: unknown) {
   const err = asError(e);
   if (err.kind !== "cancelled") toast(friendly(err), "error");

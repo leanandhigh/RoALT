@@ -12,7 +12,6 @@
 
 pub mod backup;
 mod dpapi;
-mod hello;
 pub mod master;
 
 use std::fmt;
@@ -25,7 +24,6 @@ use crate::error::{AppError, Result};
 use crate::model::VaultMode;
 
 pub use dpapi::{protect_with, unprotect_with};
-pub use hello::{hello_available, windows_hello};
 
 /// A secret string (cookie, password). Zeroed on drop, never printed.
 #[derive(Clone)]

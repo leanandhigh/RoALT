@@ -183,9 +183,9 @@ const SETTINGS_ENTRIES: readonly Entry[] = [
   { id: "liteUi", place: appearance, label: "settings.liteUi", hint: "settings.liteUiHint", field: "liteUi", control: SWITCH, aliases: ["performance", "laptop", "gpu", "lag", "resources", "ram", "cpu"] },
 
   {
-    id: "encryption", place: security, label: "settings.encryption", field: "vault.mode", control: CUSTOM, aliases: ["dpapi", "aes", "password", "hello", "vault"],
+    id: "encryption", place: security, label: "settings.encryption", field: "vault.mode", control: CUSTOM, aliases: ["dpapi", "aes", "password", "vault"],
     hint: (c) => (master(c) ? "settings.encryptionHintMaster" : "settings.encryptionHintDpapi"),
-    more: (c) => (master(c) ? "settings.encryptionMoreMaster" : "settings.clipboardHintHello"),
+    more: (c) => (master(c) ? "settings.encryptionMoreMaster" : "settings.cookieAskNone"),
   },
   { id: "masterPassword", place: security, when: master, fallback: "encryption", label: "settings.masterPassword", hint: "settings.masterPasswordHint", control: ACTION, aliases: ["password", "change"] },
   {

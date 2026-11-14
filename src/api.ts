@@ -202,7 +202,7 @@ export const api = {
   executorTaskSetup: () => invoke<ExecutorStatus>("executor_task_setup"),
   /** Add to farm (farming), Mark done (done) or Remove from farm (none). */
   accountsSetFarm: (ids: number[], farm: import("./bindings/FarmState").FarmState) => invoke<null>("accounts_set_farm", { ids, farm }),
-  /** Master mode needs the password; DPAPI mode shows Windows Hello. */
+  /** Master mode needs the password; DPAPI mode asks nothing. */
   accountRevealCookie: (id: number, password?: string) => invoke<string>("account_reveal_cookie", { id, password }),
   accountCopyCookie: (id: number, password?: string) => invoke<void>("account_copy_cookie", { id, password }),
   /** `username:cookie` lines in a file in MTwin Manager's folder, selected in Explorer; all accounts with no ids. */
@@ -372,7 +372,7 @@ export const api = {
   groupSave: (input: GroupInput) => invoke<Group>("group_save", { input }),
   groupRemove: (id: number) => invoke<void>("group_remove", { id }),
 
-  /** Master mode needs the master password (currentPassword); DPAPI mode shows Windows Hello. */
+  /** Master mode needs the master password (currentPassword); DPAPI mode asks nothing. */
   /** The current performance settings as a profile (JSON text). */
   performanceProfile: (previewFps: number) => invoke<string>("performance_profile", { previewFps }),
   performanceExport: (path: string, previewFps: number) => invoke<void>("performance_export", { path, previewFps }),

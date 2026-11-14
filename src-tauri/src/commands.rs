@@ -124,10 +124,6 @@ pub async fn vault_set_mode(
     new_password: Option<String>,
 ) -> Result<()> {
     let rec = s.db.vault_record()?.ok_or(AppError::Internal("vault record missing".into()))?;
-    // Otherwise setting a master password would be a way round the Hello check on reveal.
-    if rec.mode == VaultMode::Dpapi && mode == VaultMode::Master && crate::vault::hello_available().await {
-        reauth(&app, &s, None, &tr!("Confirm it's you to set a master password.")).await?;
-    }
     let new_rec = s.vault.rewrap(&rec, mode, current_password.as_deref(), new_password.as_deref())?;
     s.db.save_vault_record(&new_rec)?;
     s.vault.set_mode(mode);
@@ -481,17 +477,16 @@ pub async fn accounts_validate(app: AppHandle, s: State<'_, App>, ids: Option<Ve
     }
 }
 
-/// Master mode asks for the password again; DPAPI mode asks Windows Hello.
-async fn reauth(app: &AppHandle, s: &App, password: Option<String>, prompt: &str) -> Result<()> {
+/// With a master password, it's asked again. Without one nothing is asked: not every PC has
+/// Windows Hello, and anyone at this PC can already open MTwin Manager. Whoever wants a check sets
+/// a master password.
+async fn reauth(_app: &AppHandle, s: &App, password: Option<String>, _prompt: &str) -> Result<()> {
     match s.vault.mode() {
         VaultMode::Master => {
             let rec = s.db.vault_record()?.ok_or(AppError::Internal("vault record missing".into()))?;
             s.vault.check_password(&rec, password.as_deref().ok_or(AppError::WrongPassword)?)
         }
-        VaultMode::Dpapi => {
-            let window = app.get_webview_window("main").ok_or(AppError::Internal("no main window".into()))?;
-            crate::vault::windows_hello(&window, prompt).await
-        }
+        VaultMode::Dpapi => Ok(()),
     }
 }
 

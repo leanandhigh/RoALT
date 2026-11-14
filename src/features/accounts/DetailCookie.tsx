@@ -14,7 +14,7 @@ const REVEAL_MS = 20_000;
 type Kind = "reveal" | "copy";
 
 /** The account's cookie, masked. Reveal and Copy ask first (MAIN: once more), then the master password
- * or Windows Hello. A revealed cookie hides itself after 20 s, and goes at once when the tab, the
+ * when one is set. A revealed cookie hides itself after 20 s, and goes at once when the tab, the
  * account or the vault (lock) changes: all of those unmount this. */
 export function DetailCookie({ account: a, vaultMode, clipboardSeconds, label }: { account: AccountSummary; vaultMode: VaultMode; clipboardSeconds: number; label?: string }) {
   const [cookie, setCookie] = useState<{ value: string; until: number } | null>(null);
@@ -52,7 +52,7 @@ export function DetailCookie({ account: a, vaultMode, clipboardSeconds, label }:
     if (a.main && !confirmed) setMainAsk(kind);
     else if (vaultMode === "master") setAsk(kind);
     else {
-      // Windows Hello: the backend asks. A dismissed prompt stays quiet.
+      // No master password: nothing to ask.
       setBusy(kind);
       run(kind)
         .catch((e) => {
@@ -95,7 +95,7 @@ export function DetailCookie({ account: a, vaultMode, clipboardSeconds, label }:
           ? t("accounts.detail.cookieHides", { count: left })
           : vaultMode === "master"
             ? t("accounts.detail.cookieAskMaster")
-            : t("accounts.detail.cookieAskHello")}
+            : t("accounts.detail.cookieAskNone")}
       </p>
       {error && (
         <p role="alert" className="alert">

@@ -12,7 +12,7 @@ type Stage = "confirm" | "password" | "done";
 
 /**
  * "Export cookies" in one dialog that changes step: the warning, then the master password (or Windows
- * Hello, asked by the backend), then the file's path with Copy path, Show in folder and Delete now.
+ * password when one is set), then the file's path with Copy path, Show in folder and Delete now.
  * `ids`: the accounts to export, null for all; the dialog shows while it is set. Closing drops the
  * password and the path.
  */
