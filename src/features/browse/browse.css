@@ -125,10 +125,27 @@
     background: var(--surface-1);
     color: var(--fg);
   }
+  .bx-item {
+    position: relative;
+  }
+  /* The page on screen: a filled row, its icon in the accent colour, and a short bar beside it. */
   .bx-item[aria-current="page"] {
     background: var(--surface-2);
     color: var(--fg);
-    box-shadow: inset 2px 0 0 var(--accent);
+  }
+  .bx-item[aria-current="page"] svg {
+    color: var(--accent-text);
+  }
+  .bx-item[aria-current="page"]::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: -12px;
+    top: 50%;
+    width: 3px;
+    height: 16px;
+    margin-top: -8px;
+    border-radius: 0 3px 3px 0;
+    background: var(--accent);
   }
   .bx-item span {
     white-space: nowrap;
@@ -234,6 +251,9 @@
       width: 40px;
       justify-content: center;
       padding: 0;
+    }
+    .bx-item[aria-current="page"]::before {
+      inset-inline-start: -11px;
     }
     .bx-nav {
       gap: 4px;
