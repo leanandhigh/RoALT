@@ -121,10 +121,18 @@
   [data-row="perAccount"], #perAccount {
     flex-wrap: wrap;
   }
+  /* The table takes the row's whole line, under its name. */
+  .set-line:has(.pa-wrap) {
+    flex-wrap: wrap;
+  }
+  .set-control:has(> .pa-wrap) {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
   .pa-wrap {
     width: 100%;
-    overflow-x: auto;
     margin-top: 6px;
+    container: pa / inline-size;
   }
   .pa {
     width: 100%;
@@ -168,5 +176,53 @@
   }
   .pa-args {
     min-width: 150px;
+  }
+  /* Too narrow for the table (a small window, the Live column open): one card per account, each
+     setting on its own line with its name. */
+  @container pa (max-width: 800px) {
+    .pa thead {
+      display: none;
+    }
+    .pa,
+    .pa tbody {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .pa tr {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+      gap: 4px 16px;
+      padding: 10px 12px;
+      border-radius: var(--r-md);
+      background: var(--surface-2);
+    }
+    .pa td {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 4px 0;
+      border: 0;
+      min-width: 0;
+    }
+    .pa td[data-label]::before {
+      content: attr(data-label);
+      color: var(--fg-3);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .pa td.pa-first {
+      grid-column: 1 / -1;
+      padding-bottom: 6px;
+    }
+    .pa-args {
+      min-width: 0;
+      grid-column: 1 / -1;
+    }
+    .pa-args > * {
+      flex: 1;
+      min-width: 0;
+    }
   }
 }

@@ -553,7 +553,7 @@ function PerAccount({ account: a, flagsOn, onFlags }: { account: AccountSummary;
   const count = Object.keys(a.customFlags).length;
   return (
     <tr>
-      <td>
+      <td className="pa-first">
         <span className="pa-who">
           <Avatar account={a} size={24} />
           <span className="min-w-0">
@@ -562,17 +562,17 @@ function PerAccount({ account: a, flagsOn, onFlags }: { account: AccountSummary;
           </span>
         </span>
       </td>
-      <td><Switch label={t("accounts.detail.fullQuality")} checked={a.fullQuality} onChange={(fullQuality) => save({ fullQuality })} /></td>
-      <td><Switch label={t("accounts.detail.bringBack")} checked={!a.allowDisconnect} onChange={(back) => save({ allowDisconnect: !back })} /></td>
-      <td>
+      <td data-label={t("accounts.detail.fullQuality")}><Switch label={t("accounts.detail.fullQuality")} checked={a.fullQuality} onChange={(fullQuality) => save({ fullQuality })} /></td>
+      <td data-label={t("settings.perAccountBack")}><Switch label={t("accounts.detail.bringBack")} checked={!a.allowDisconnect} onChange={(back) => save({ allowDisconnect: !back })} /></td>
+      <td data-label={t("accounts.detail.fpsCap")}>
         <OffOrNumberField label={t("accounts.detail.fpsCap")} value={a.fpsCap ?? 0} range={RANGES.fpsCap} unit={t("accounts.detail.fpsUnit")} short="FPS" onCommit={(fpsCap) => save({ fpsCap })} />
       </td>
-      <td className="pa-args">
+      <td className="pa-args" data-label={t("accounts.detail.launchArgs")}>
         <TextField label={t("accounts.detail.launchArgs")} placeholder={t("settings.perAccountDefault")} value={a.launchArgs ?? ""} onCommit={(launchArgs) => update.mutateAsync({ id: a.id, patch: { launchArgs } })} />
       </td>
-      <td><Switch label={t("accounts.detail.muteDiscord")} checked={a.discordMuted} onChange={(discordMuted) => save({ discordMuted })} /></td>
+      <td data-label={t("settings.perAccountMute")}><Switch label={t("accounts.detail.muteDiscord")} checked={a.discordMuted} onChange={(discordMuted) => save({ discordMuted })} /></td>
       {flagsOn && (
-        <td>
+        <td data-label={t("flags.title")}>
           <Button size="sm" icon="pencil" onClick={onFlags}>{count ? t("flags.count", { count }) : t("flags.edit")}</Button>
         </td>
       )}

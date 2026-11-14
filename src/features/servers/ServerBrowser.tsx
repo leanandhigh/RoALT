@@ -17,7 +17,6 @@ import { fmtNum, t, tx, type Key } from "../../i18n";
 import { accountName } from "../accounts/shared";
 import { useGameDetails } from "../browse/GameDetails";
 import { useNow } from "../launch/Running";
-import { BuyPrivateServerDialog } from "./BuyPrivateServerDialog";
 import { PrivateServerDialog } from "./PrivateServerDialog";
 import { PrivateTable, PublicTable, short, type Pick } from "./ServerTables";
 import "./servers.css";
@@ -82,7 +81,6 @@ export function ServerBrowser({ accounts, asker, place, setPlace, onChoice, vari
   const [loading, setLoading] = useState(false);
   const [nudges, setNudges] = useState(0);
   const [manage, setManage] = useState<{ server: PrivateServer; owner: AccountSummary } | null>(null);
-  const [buying, setBuying] = useState(false);
   const details = useGameDetails();
   // Another game from outside (Play re-seeding its drawer) starts over: a server picked in one game
   // must not travel to the next.
@@ -379,11 +377,7 @@ export function ServerBrowser({ accounts, asker, place, setPlace, onChoice, vari
                       <span aria-hidden="true">{t("servers.hideFull")}</span>
                     </label>
                   </>
-                ) : (
-                  <Button size="md" icon="plus" disabled={!valid.length} aria-describedby={valid.length ? undefined : noteId} onClick={() => setBuying(true)}>
-                    {t("servers.buy")}
-                  </Button>
-                )}
+                ) : null}
                 <span className="flex items-center gap-3 ms-auto">
                   <span className="srv-updated meta tabular-nums">
                     {list.isFetching ? t("common.loading") : list.dataUpdatedAt > 0 && <Updated at={list.dataUpdatedAt} />}
@@ -457,16 +451,6 @@ export function ServerBrowser({ accounts, asker, place, setPlace, onChoice, vari
         onClose={() => setManage(null)}
         onChanged={privChanged}
       />
-      {g && (
-        <BuyPrivateServerDialog
-          open={buying}
-          onClose={() => setBuying(false)}
-          game={g}
-          accounts={valid}
-          payer={asker}
-          onBought={privChanged}
-        />
-      )}
       {!drawer && details.dialog}
     </>
   );

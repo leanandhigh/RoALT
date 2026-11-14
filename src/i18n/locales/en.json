@@ -1422,6 +1422,8 @@
   "browse.forward": "Forward",
   "browse.reload": "Reload",
   "browse.pages": "Roblox pages",
+  "browse.copyPlace": "Copy place ID",
+  "browse.placeCopied": "Place ID {id} copied",
   "browse.roblox": "Roblox",
   "browse.mtwin": "MTwin",
   "browse.searchFor": "Search for",

@@ -252,6 +252,8 @@ pub struct Progress {
     images: Mutex<HashMap<i64, Option<String>>>,
     /// Roblox user id → headshot URL, for the session.
     heads: Mutex<HashMap<i64, String>>,
+    /// Universe id → game icon URL, for the website; None: Roblox has none.
+    game_icons: Mutex<HashMap<i64, Option<String>>>,
     web_error: Mutex<Option<String>>,
     exec: Mutex<Exec>,
     /// What the page this PC is served must send to run a script (`/api/exec`); in no other page,
@@ -309,6 +311,7 @@ impl Progress {
             server: Mutex::new(ProgressServer { port: PORT, running: false, error: None }),
             images: Mutex::new(HashMap::new()),
             heads: Mutex::new(HashMap::new()),
+            game_icons: Mutex::new(HashMap::new()),
             web_error: Mutex::new(None),
             exec: Mutex::new(Exec::default()),
             exec_token: uuid::Uuid::new_v4().simple().to_string(),
@@ -422,7 +425,14 @@ impl Progress {
             .iter()
             .map(|(game, list)| (game.clone(), Value::Object(list.iter().filter(|e| !e.image.is_empty()).map(|e| (e.id.clone(), Value::String(e.image.clone()))).collect())))
             .collect();
-        serde_json::json!({ "now": now, "onlineMs": ONLINE_MS, "accounts": rows, "images": pics, "catalogImages": catalog }).to_string()
+        let game_icons: serde_json::Map<String, Value> = self
+            .game_icons
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .iter()
+            .filter_map(|(id, url)| Some((id.to_string(), Value::String(url.clone()?))))
+            .collect();
+        serde_json::json!({ "now": now, "onlineMs": ONLINE_MS, "accounts": rows, "images": pics, "catalogImages": catalog, "gameIcons": game_icons }).to_string()
     }
 
     /// Decal ids of items and values (and their Catalog pictures) not looked up yet (at most `max`).
@@ -499,6 +509,13 @@ impl Progress {
         }
         let list: Vec<&ExecResult> = x.results.iter().rev().collect();
         serde_json::to_string(&list).unwrap_or_else(|_| "[]".into())
+    }
+
+    /// Universe ids of reported games without an icon looked up yet (at most `max`).
+    fn missing_game_icons(&self, max: usize) -> Vec<i64> {
+        let ids: HashSet<i64> = self.stored().accounts.values().filter_map(|a| a.game_id.parse::<i64>().ok()).filter(|id| *id > 0).collect();
+        let icons = self.game_icons.lock().unwrap_or_else(|e| e.into_inner());
+        ids.into_iter().filter(|id| !icons.contains_key(id)).take(max).collect()
     }
 
     /// User ids without a headshot yet (at most `max`).
@@ -936,6 +953,22 @@ async fn web_api(handle: &AppHandle, stream: &mut TcpStream) {
     if !missing.is_empty() {
         let (found, complete) = s.api.asset_icons(&missing).await;
         let mut cache = s.progress.images.lock().unwrap_or_else(|e| e.into_inner());
+        for id in &missing {
+            match found.get(id) {
+                Some(url) => {
+                    cache.insert(*id, Some(url.clone()));
+                }
+                None if complete => {
+                    cache.insert(*id, None);
+                }
+                None => {}
+            }
+        }
+    }
+    let missing = s.progress.missing_game_icons(50);
+    if !missing.is_empty() {
+        let (found, complete) = s.api.game_icons(&missing).await;
+        let mut cache = s.progress.game_icons.lock().unwrap_or_else(|e| e.into_inner());
         for id in &missing {
             match found.get(id) {
                 Some(url) => {

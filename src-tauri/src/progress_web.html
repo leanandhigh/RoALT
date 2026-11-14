@@ -97,6 +97,22 @@
   /* ---- A game ---- */
   .gh { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
   .gh h1 { margin: 0; font-size: 20px; letter-spacing: -0.02em; }
+  .gh .gi { width: 36px; height: 36px; border-radius: 8px; background: var(--s3); display: grid; place-items: center; font-weight: 700; font-size: 12px; color: var(--fg2); overflow: hidden; flex: none; }
+  .gh .gi img { width: 100%; height: 100%; object-fit: cover; }
+  /* An account, as in the app: who, where, every value and stat, then its items. */
+  dialog.acc { width: min(860px, calc(100vw - 32px)); max-height: calc(100vh - 48px); overflow: hidden; }
+  dialog.acc[open] { display: flex; flex-direction: column; }
+  .ad-h { display: flex; align-items: center; gap: 12px; padding: 18px 20px 12px; }
+  .ad-h h3 { margin: 0; font-size: 17px; }
+  .ad-h .btn { margin-left: auto; }
+  .ad-b { padding: 4px 20px 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
+  .ad-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .ad-meta .av { width: 44px; height: 44px; border-radius: 10px; }
+  .pillx { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 9px; border-radius: 6px; background: var(--s2); box-shadow: inset 0 0 0 1px var(--line); font-size: 12.5px; color: var(--fg2); }
+  .pillx b { color: var(--fg); font-weight: 600; }
+  .ad-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; }
+  .ad-tiles .tile { padding: 12px 14px; }
+  .ad-tiles .tile .v { font-size: 17px; }
   .gh .pcs { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
   .tabs { display: inline-flex; gap: 2px; padding: 3px; border-radius: 8px; background: var(--s1); box-shadow: inset 0 0 0 1px var(--line); margin-bottom: 4px; }
   .tab { display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 12px; border-radius: 6px; border: 0; background: none; color: var(--fg2); font-size: 13px; font-weight: 600; }
@@ -135,7 +151,12 @@
   .val b { color: var(--fg); }
   .st { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; white-space: nowrap; }
   .st.on { color: var(--ok); } .st.off { color: var(--fg3); } .st.slow { color: var(--warn); }
-  .cbx { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
+  .cbx { appearance: none; width: 18px; height: 18px; margin: 0; border-radius: 5px; background: var(--s2); box-shadow: inset 0 0 0 1.5px var(--line2); cursor: pointer; display: inline-grid; place-items: center; vertical-align: middle; transition: background 0.12s, box-shadow 0.12s; }
+  .cbx:hover { box-shadow: inset 0 0 0 1.5px var(--fg3); }
+  .cbx:checked { background: var(--accent); box-shadow: none; }
+  .cbx:checked::after { content: ""; width: 9px; height: 5px; border: 2px solid #fff; border-top: 0; border-right: 0; transform: translateY(-1px) rotate(-45deg); }
+  .cbx:focus-visible { outline: 2px solid color-mix(in srgb, var(--accent) 60%, transparent); outline-offset: 2px; }
+  tbody tr { cursor: pointer; }
   .err { color: var(--warn); font-size: 12px; }
   .copy { border: 0; background: none; color: var(--fg3); padding: 0 2px; font-size: 11px; }
   .copy:hover { color: var(--fg); }
@@ -219,6 +240,7 @@
   </ol>
   <div class="sx-foot"><button class="btn ghost" id="sheetOff" type="button">Turn off</button><span class="sp"></span><button class="btn" id="sheetCancel" type="button">Cancel</button><button class="btn go" id="sheetSave" type="button">Save</button></div>
 </dialog>
+<dialog class="acc" id="acc"><div class="ad-h"><h3 id="adTitle"></h3><button class="btn ghost icon" id="adClose" type="button" aria-label="Close">✕</button></div><div class="ad-b" id="adBody"></div></dialog>
 <script>
 (() => {
   const key = new URLSearchParams(location.search).get("key");
@@ -290,6 +312,7 @@
     }
     return [...games.values()];
   }
+  const gameIcon = (id) => (data.gameIcons && data.gameIcons[id]) || null;
   const imageOf = (id) => (id && data.images && data.images[id]) || null;
   const pic = (gameId, item) => imageOf(item.image || (data.catalogImages && data.catalogImages[gameId] && data.catalogImages[gameId][item.id]) || "");
 
@@ -335,7 +358,7 @@
     if (!shown.length) { $("games").innerHTML = `<div class="empty">No games match.</div>`; return; }
     $("games").innerHTML = `<div class="games">${shown.map((x) => `
       <button class="panel game" type="button" data-game="${esc(x.id)}">
-        <div class="gt"><span class="gi">${esc(initials(x.name))}</span><div style="min-width:0"><div class="gn">${esc(x.name)}</div><span class="meta">${x.online ? "Running" : "Last report " + ago(data.now - Math.max(...x.accounts.map((a) => a.lastSeen)))}</span></div></div>
+        <div class="gt"><span class="gi">${gameIcon(x.id) ? `<img src="${esc(gameIcon(x.id))}" alt="" loading="lazy">` : esc(initials(x.name))}</span><div style="min-width:0"><div class="gn">${esc(x.name)}</div><span class="meta">${x.online ? "Running" : "Last report " + ago(data.now - Math.max(...x.accounts.map((a) => a.lastSeen)))}</span></div></div>
         <div class="gs"><div><b class="${x.online ? "ok" : ""}">${x.online}</b><span>Online now</span></div><div><b>${x.accounts.length}</b><span>Accounts</span></div><div><b>${num(x.items)}</b><span>Items</span></div></div>
       </button>`).join("")}</div>`;
     $("games").querySelectorAll("[data-game]").forEach((b) => (b.onclick = () => go(b.dataset.game)));
@@ -344,7 +367,7 @@
   // ---- A game ----
   function gameShell(g) {
     const tabs = [["items", "Items", I.grid], ["accounts", "Accounts", I.user]].concat(EXEC ? [["script", "Script", I.code]] : []);
-    return `<div class="gh"><button class="btn ghost icon" type="button" id="back" aria-label="All games">${I.back}</button><h1>${esc(g.name)}</h1><div class="pcs" id="pcs"></div></div>
+    return `<div class="gh"><button class="btn ghost icon" type="button" id="back" aria-label="All games">${I.back}</button><span class="gi">${gameIcon(g.id) ? `<img src="${esc(gameIcon(g.id))}" alt="">` : esc(initials(g.name))}</span><h1>${esc(g.name)}</h1><div class="pcs" id="pcs"></div></div>
       <div class="strip" id="strip"></div>
       <div class="tabs" role="tablist">${tabs.map(([k, l, ic]) => `<button class="tab" role="tab" type="button" data-tab="${k}" aria-selected="${ui.tab === k}">${ic}${l}<span class="n" id="n-${k}"></span></button>`).join("")}</div>
       <section id="t-items" ${ui.tab === "items" ? "" : "hidden"}>
@@ -501,6 +524,7 @@
         <td class="un">${esc(a.pc || "")}</td>
       </tr>`).join("")}</tbody></table>`;
     $("accs").querySelectorAll("[data-pick]").forEach((c) => (c.onchange = () => { if (c.checked) picked.add(c.dataset.pick); else picked.delete(c.dataset.pick); render(); }));
+    $("accs").querySelectorAll("tbody tr").forEach((tr, i) => (tr.onclick = (e) => { if (!e.target.closest("input, button")) openAccount(rows[i].key); }));
     const all = $("pickall");
     if (all) all.onchange = () => { rows.forEach((a) => (all.checked ? picked.add(a.key) : picked.delete(a.key))); render(); };
     $("accs").querySelectorAll("[data-copy]").forEach((b) => (b.onclick = () => navigator.clipboard?.writeText(b.dataset.copy).then(() => { b.textContent = "✓"; setTimeout(() => (b.textContent = "⧉"), 1200); })));
@@ -552,6 +576,34 @@
       if (ui.tab !== "script" || !$("res")) break;
       await new Promise((ok) => setTimeout(ok, 1500));
     }
+  }
+
+  // ---- One account: who, where, its values and stats, its items ----
+  let openKey = null;
+  $("adClose").onclick = () => $("acc").close();
+  $("acc").addEventListener("close", () => (openKey = null));
+  $("acc").addEventListener("click", (e) => { if (e.target === $("acc")) $("acc").close(); });
+  function openAccount(key) { openKey = key; drawAccount(); $("acc").showModal(); }
+  function drawAccount() {
+    const a = data && data.accounts.find((x) => x.key === openKey);
+    if (!a) { if ($("acc").open) $("acc").close(); return; }
+    $("adTitle").textContent = `${a.displayName || a.name} (@${a.name})`;
+    const tile = (k, v, icon) => `<div class="panel tile">${icon ?? ""}<div style="min-width:0"><div class="k">${esc(k)}</div><div class="v">${v}</div></div></div>`;
+    const tiles = (a.level != null ? tile("Level", num(a.level)) : "")
+      + a.values.map((v) => { const src = imageOf(v.image); return tile(v.name, num(v.amount), `<span class="ico">${src ? `<img src="${esc(src)}" alt="">` : esc(initials(v.name))}</span>`); }).join("")
+      + a.stats.map((x) => tile(x.name, esc(x.value) + (x.max != null ? " / " + num(x.max) : ""))).join("");
+    const items = a.items.map((it) => ({ ...it, src: pic(a.gameId, it) })).sort((x, y) => rarityRank(x.rarity) - rarityRank(y.rarity) || (y.count || 1) - (x.count || 1) || x.name.localeCompare(y.name));
+    $("adBody").innerHTML = `
+      <div class="ad-meta">${a.head ? `<img class="av" src="${esc(a.head)}" alt="">` : `<span class="av"></span>`}
+        <span class="pillx">${state(a)} <span>last report ${ago(data.now - a.lastSeen)}</span></span>
+        ${a.pc ? `<span class="pillx">${I.pc}${esc(a.pc)}</span>` : ""}
+        <span class="pillx">${esc(a.gameName || "")}</span></div>
+      ${a.errors && a.errors.length ? `<div class="err">⚠ ${esc(a.errors.join(" · "))}</div>` : ""}
+      ${tiles ? `<div class="ad-tiles">${tiles}</div>` : ""}
+      ${items.length ? `<p class="label">Items · ${num(items.length)} kinds</p><div class="items">${items.map((it) => `<div class="item" style="--c:${rarityColour(it.rarity)}">
+          <span class="rar${it.rarity ? "" : " none"}">${esc(it.rarity || "-")}</span><span class="cnt">×${num(it.count || 1)}</span>
+          ${it.src ? `<img class="pic" src="${esc(it.src)}" alt="" loading="lazy">` : `<span class="nopic">${esc(initials(it.name))}</span>`}
+          <span class="nm" title="${esc(it.name)}">${esc(it.name)}</span>${it.category ? `<span class="cat">${esc(it.category)}</span>` : ""}</div>`).join("")}</div>` : ""}`;
   }
 
   // ---- CSV of the accounts on screen (a game's, or all) ----
@@ -641,7 +693,7 @@
   document.addEventListener("keydown", (e) => {
     const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName || "");
     if (e.key === "/" && !typing) { e.preventDefault(); document.querySelector(".page input[type=search]:not([hidden])")?.focus(); }
-    if (e.key === "Escape" && !typing && ui.game != null && !dlg.open) go(null);
+    if (e.key === "Escape" && !typing && ui.game != null && !dlg.open && !$("acc").open) go(null);
   });
 
   async function load() {
@@ -654,6 +706,7 @@
       $("dot").className = "dot on";
       $("status").textContent = "Live · " + new Date().toLocaleTimeString();
       render();
+      if (openKey) drawAccount();
     } catch (e) {
       failed++;
       $("dot").className = "dot err";

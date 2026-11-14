@@ -1,6 +1,7 @@
 import "./browse.css";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { listen } from "@tauri-apps/api/event";
+import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { api, type AccountSummary, type BrowseBlocked, type BrowsePage, type BrowsePlay } from "../../api";
 import type { BrowseRequest } from "../../app/navigation";
 import { useSettings } from "../../data";
@@ -199,8 +200,13 @@ export function BrowseView({ accounts, ask }: { accounts: AccountSummary[]; ask:
             </span>
           </form>
           {gamePage && (
-            <Button size="sm" variant="ghost" icon="info" onClick={() => details.open(gamePage)}>
-              {t("game.detailsTip")}
+            <Button
+              size="sm"
+              variant="ghost"
+              icon="copy"
+              onClick={() => writeText(String(gamePage)).then(() => toast(t("browse.placeCopied", { id: String(gamePage) })), toastError)}
+            >
+              {t("browse.copyPlace")}
             </Button>
           )}
           {profilePage && (

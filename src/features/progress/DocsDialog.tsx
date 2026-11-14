@@ -218,13 +218,24 @@ function Section({ id, title, children }: { id: string; title: Key; children: Re
 export function DocsDialog({ open, onClose, host }: { open: boolean; onClose: () => void; host: string }) {
   const main = useRef<HTMLDivElement>(null);
   const [at, setAt] = useState("overview");
+  // A section picked in the list stays lit while the page scrolls to it (and after, when it is too
+  // near the end to reach the top).
+  const picked = useRef<{ id: string; until: number } | null>(null);
   useEffect(() => {
     const el = main.current;
     if (!open || !el) return;
     const spy = () => {
-      const top = el.getBoundingClientRect().top + 24;
+      if (picked.current && performance.now() < picked.current.until) return setAt(picked.current.id);
+      picked.current = null;
+      const box = el.getBoundingClientRect();
+      const sections = [...el.querySelectorAll<HTMLElement>("[data-dx]")];
+      // At the very end, the last section whose heading shows: the short ones there never reach the top.
+      if (el.scrollTop + el.clientHeight >= el.scrollHeight - 4) {
+        const shown = sections.filter((s) => s.getBoundingClientRect().top < box.bottom - 40);
+        return setAt(shown.at(-1)?.dataset.dx ?? "overview");
+      }
       let cur = "overview";
-      for (const s of el.querySelectorAll<HTMLElement>("[data-dx]")) if (s.getBoundingClientRect().top <= top) cur = s.dataset.dx!;
+      for (const s of sections) if (s.getBoundingClientRect().top <= box.top + 24) cur = s.dataset.dx!;
       setAt(cur);
     };
     el.addEventListener("scroll", spy, { passive: true });
@@ -233,6 +244,7 @@ export function DocsDialog({ open, onClose, host }: { open: boolean; onClose: ()
   const go = (id: string) => {
     const el = main.current?.querySelector<HTMLElement>(`[data-dx="${id}"]`);
     const box = main.current;
+    picked.current = { id, until: performance.now() + 900 };
     if (el && box) box.scrollTo({ top: el.getBoundingClientRect().top - box.getBoundingClientRect().top + box.scrollTop - 4, behavior: "smooth" });
     setAt(id);
   };

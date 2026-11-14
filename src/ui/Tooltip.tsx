@@ -40,7 +40,13 @@ export function TooltipHost() {
       text.textContent = el.dataset.tip;
       kbd.textContent = el.dataset.tipKbd ?? "";
       kbd.hidden = !el.dataset.tipKbd;
-      if (!open()) tip.showPopover();
+      if (!open()) {
+        try {
+          tip.showPopover();
+        } catch {
+          // Another popover is opening or closing right now: no tip this time.
+        }
+      }
       flow();
     };
     // Moving from trigger to trigger, the tip flows from where it was instead of blinking there.

@@ -127,8 +127,21 @@ export function Toaster() {
   useLayoutEffect(() => {
     const host = top ?? document.body;
     if (box.parentNode !== host) host.append(box);
-    if (box.matches(":popover-open")) box.hidePopover();
-    box.showPopover();
+    // Not while another popover is opening or closing (a menu picking a page): the browser refuses
+    // then, so it is tried again on the next frame.
+    const raise = () => {
+      try {
+        if (box.matches(":popover-open")) box.hidePopover();
+        box.showPopover();
+        return true;
+      } catch {
+        return false;
+      }
+    };
+    if (!raise()) {
+      const f = requestAnimationFrame(() => void raise());
+      return () => cancelAnimationFrame(f);
+    }
   }, [box, top, newest]);
   // Each toast is its own status or alert region: no live region around them (read twice).
   return createPortal(
