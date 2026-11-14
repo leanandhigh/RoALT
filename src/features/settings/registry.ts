@@ -19,6 +19,7 @@ export type Place =
   | { view: "settings"; area: SettingsArea; group?: Key }
   | { view: "performance"; group: Key }
   | { view: "discord"; group?: Key }
+  | { view: "updates"; group?: Key }
   | { view: Extract<View, "accounts" | "launch" | "dashboard">; link: true };
 
 /** What conditions and changing lines read. `background`: a background image is set. */
@@ -93,6 +94,8 @@ const ACTION = { kind: "action" } as const;
 const LINK = { kind: "link" } as const;
 const launching = { view: "settings", area: "launching" } as const;
 const appearance = { view: "settings", area: "appearance" } as const;
+/** The Roblox client rows live on the Roblox Update page. */
+const updates = { view: "updates", group: "settings.client" } as const;
 const security = { view: "settings", area: "security" } as const;
 const data = { view: "settings", area: "data" } as const;
 const about = { view: "settings", area: "about" } as const;
@@ -114,11 +117,11 @@ const SETTINGS_ENTRIES: readonly Entry[] = [
     control: { kind: "text", placeholder: "settings.placeholderNone", size: "lg" }, aliases: ["args", "bootstrapper", "command"],
   },
   {
-    id: "executor", place: launching, label: "executor.label", hint: "executor.short", more: "executor.hint", field: "executor",
+    id: "executor", place: updates, label: "executor.label", hint: "executor.short", more: "executor.hint", field: "executor",
     control: CUSTOM, invalidates: ["client"], aliases: ["executor", "exploit", "weao", "downgrade", "version", "pin"],
   },
   {
-    id: "clientPath", place: launching, label: "settings.clientPath", hint: "settings.clientPathShort", more: "settings.clientPathHint", field: "clientPath",
+    id: "clientPath", place: updates, label: "settings.clientPath", hint: "settings.clientPathShort", more: "settings.clientPathHint", field: "clientPath",
     control: CUSTOM, invalidates: ["client"],
     aliases: ["bootstrapper", "bloxstrap", "fishstrap", "froststrap", "voidstrap", "exe", "path", "launch with"],
   },
@@ -145,8 +148,8 @@ const SETTINGS_ENTRIES: readonly Entry[] = [
   },
   { id: "closeGrace", place: launching, label: "settings.closeGrace", hint: "settings.closeGraceHint", field: "closeGraceS", control: { kind: "number", min: 1, max: 60, unit: "settings.unit.seconds", short: "settings.unit.s" } },
   { id: "shutdown", place: launching, label: "settings.shutdown", hint: "settings.shutdownShort", more: "settings.shutdownHintClose", control: ACTION, aliases: ["timer", "power", "turn off"] },
-  { id: "client", place: launching, label: "settings.client", more: "settings.clientInstallHint", control: ACTION, aliases: ["roblox", "install", "update", "version", "bloxstrap"] },
-  { id: "autoUpdate", place: launching, label: "settings.autoUpdate", more: "settings.autoUpdateHint", field: "autoUpdate", control: SWITCH, aliases: ["roblox", "version"] },
+  { id: "client", place: updates, label: "settings.client", more: "settings.clientInstallHint", control: ACTION, aliases: ["roblox", "install", "update", "version", "bloxstrap"] },
+  { id: "autoUpdate", place: updates, label: "settings.autoUpdate", more: "settings.autoUpdateHint", field: "autoUpdate", control: SWITCH, aliases: ["roblox", "version"] },
 
   {
     id: "theme", place: appearance, label: "settings.theme", hint: "settings.themeHint", field: "theme", aliases: ["dark", "light", "mode"],

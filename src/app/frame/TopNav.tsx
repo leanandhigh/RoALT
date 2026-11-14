@@ -4,7 +4,7 @@ import type { IslandLeaf, IslandModel } from "../../ui/island/model";
 import { MenuItem, Popover, useAnchor } from "../../ui/Popover";
 
 /** The places used every session, as tabs; the rest under More. */
-const TABS = ["home", "accounts", "play", "servers", "progress", "monitor"];
+const TABS = ["home", "accounts", "play", "servers", "progress", "updates", "executor"];
 /** Not a page: Play opens as a panel (from Accounts, Home's games, Ctrl+3). */
 const HIDDEN: string[] = [];
 

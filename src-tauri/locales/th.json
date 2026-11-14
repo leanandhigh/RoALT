@@ -370,5 +370,6 @@
   "Couldn't start the executor: {why}": "เปิด executor ไม่ได้: {why}",
   "That script is over 1 MB.": "สคริปต์นี้ใหญ่เกิน 1 MB",
   "{name} was disconnected and wasn't rejoined: {rejoin} is off. Turn it on (Accounts, beside Check all sign-ins, or Settings) to reconnect clients by themselves.": "{name} หลุดการเชื่อมต่อและไม่ได้เข้าใหม่: {rejoin} ปิดอยู่ เปิดได้ที่หน้าบัญชี (ข้างปุ่มตรวจสอบการเข้าสู่ระบบทั้งหมด) หรือในการตั้งค่า เพื่อให้ไคลเอนต์เข้าใหม่เอง",
-  "It wasn't set up. Allow the admin prompt Windows shows to set it up.": "ยังไม่ได้ตั้งค่า กดอนุญาตในหน้าต่างยืนยันสิทธิ์ผู้ดูแลที่ Windows แสดงเพื่อตั้งค่า"
+  "It wasn't set up. Allow the admin prompt Windows shows to set it up.": "ยังไม่ได้ตั้งค่า กดอนุญาตในหน้าต่างยืนยันสิทธิ์ผู้ดูแลที่ Windows แสดงเพื่อตั้งค่า",
+  "Roblox said: {why}": "Roblox ตอบว่า: {why}"
 }

@@ -20,7 +20,6 @@ export const AREAS: readonly AreaDef[] = [
       { label: "settings.group.perAccount", ids: ["perAccount"] },
       { label: "farm.settings", ids: ["replaceDead", "replaceChallenged", "farmDoneAt", "closeWhenDone"] },
       { label: "settings.group.stopping", ids: ["panic", "closeGrace", "shutdown"] },
-      { label: "settings.client", ids: ["client", "executor", "clientPath", "autoUpdate"] },
     ],
   },
   {

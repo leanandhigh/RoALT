@@ -188,7 +188,10 @@ export function ToolsView({ accounts }: { accounts: AccountSummary[] }) {
                   return (
                     <li key={r.accountId} className="tl-res" data-ok={r.ok || undefined}>
                       <Icon name={r.ok ? "check" : "x"} size={14} className="tl-res-mark" />
-                      <span className="tl-res-name">{a ? accountName(a) : r.accountId}</span>
+                      <span className="tl-res-name">
+                        {a ? accountName(a) : r.accountId}
+                        {a && <span className="tl-res-user">@{a.username}</span>}
+                      </span>
                       <span className="tl-res-msg">{r.message}</span>
                     </li>
                   );

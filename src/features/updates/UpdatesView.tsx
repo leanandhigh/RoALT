@@ -9,8 +9,11 @@ import { StatusPill } from "../../ui/Status";
 import { LoadFailed, toast, toastError } from "../../ui/Toast";
 import { ago } from "../progress/shared";
 import { useNow } from "../launch/Running";
-import { useSettings } from "../../data";
-import { ExecutorStatus, useExecutors } from "./ExecutorCard";
+import { Renderers, type RowRenderers } from "../settings/kit/SettingRow";
+import { SettingSection } from "../settings/kit/SettingSection";
+import { ClientCard, ClientPathRow, ExecutorRow } from "../settings/rows/launching";
+
+const CLIENT_ROWS: RowRenderers = { client: ClientCard, clientPath: ClientPathRow, executor: ExecutorRow };
 
 type Platform = "windows" | "mac" | "android" | "ios";
 const PLATFORMS: [Platform, string][] = [
@@ -44,7 +47,12 @@ export function UpdatesView() {
         </header>
         {v?.error && <p className="up-error panel">{t("updates.partial", { why: v.error })}</p>}
         {v && <Installed v={v} />}
-        {v && <ChosenExecutor v={v} />}
+        {/* The Roblox client: how it launches, the executor it's kept on, its updates. */}
+        <section className="up-client">
+          <Renderers value={CLIENT_ROWS}>
+            <SettingSection label="settings.client" ids={["client", "executor", "clientPath", "autoUpdate"]} />
+          </Renderers>
+        </section>
         {v && <BuildTable v={v} />}
         <p className="meta up-credit">{t("updates.credit")}</p>
       </div>
@@ -82,21 +90,6 @@ function Installed({ v }: { v: RobloxVersions }) {
 }
 
 /** The executor chosen in Settings, against Roblox: what it supports, what's live, what's here. */
-function ChosenExecutor({ v }: { v: RobloxVersions }) {
-  const name = useSettings().data?.executor ?? "";
-  const e = (useExecutors().data ?? []).find((x) => x.title === name);
-  if (!name || !e) return null;
-  return (
-    <section className="up-section">
-      <h2 className="section-title">{t("executor.yours")}</h2>
-      <p className="meta">{t("executor.yoursHint")}</p>
-      <div className="panel up-exec">
-        <ExecutorStatus e={e} live={v.current?.windows?.version ?? null} installed={v.installed} />
-      </div>
-    </section>
-  );
-}
-
 /** Every platform's builds in one table: platforms down the side; live, next and the one before across. */
 function BuildTable({ v }: { v: RobloxVersions }) {
   const copy = (text: string) => writeText(text).then(() => toast(t("updates.copied", { v: text })), toastError);

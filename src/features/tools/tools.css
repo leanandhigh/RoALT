@@ -112,5 +112,6 @@
   .tl-res-mark { color: #e5484d; }
   .tl-res[data-ok] .tl-res-mark { color: #2fbf71; }
   .tl-res-name { font-weight: 550; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tl-res-user { margin-inline-start: 6px; font-weight: 400; color: var(--fg-3); font-size: var(--fs-meta); }
   .tl-res-msg { color: var(--fg-2); }
 }

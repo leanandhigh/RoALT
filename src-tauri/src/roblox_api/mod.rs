@@ -309,9 +309,9 @@ impl Client {
 
     /// `POST friends.roblox.com/v1/users/{target}/request-friendship` (cookie + CSRF). A captcha
     /// comes back as `Challenge`; it is never solved here.
-    // shortcut: body `{}` (the endpoint left the public spec), send the website's body if Roblox starts refusing it.
     pub async fn request_friendship(&self, account_id: i64, cookie: &Secret, target: i64) -> Result<()> {
-        let (route, body) = (endpoints::REQUEST_FRIENDSHIP, Value::Object(Default::default()));
+        // Roblox answers 400 without where the request came from; its own profile page sends this.
+        let (route, body) = (endpoints::REQUEST_FRIENDSHIP, serde_json::json!({ "friendshipOriginSourceType": "UserProfile" }));
         let url = endpoints::fill(route, target);
         self.request(Method::POST, route, &url, Some(&body), account_id, Some(cookie)).await.map(|_| ())
     }
@@ -966,6 +966,15 @@ impl Client {
                     "Pick an account to sort by Recommended or Best latency: Roblox only does that for a signed-in account."
                 )));
             }
+            // Friends, blocking, display names: Roblox's own reason ("already friends", "too many
+            // requests") says more than a status code.
+            if status == StatusCode::BAD_REQUEST
+                && matches!(route, endpoints::REQUEST_FRIENDSHIP | endpoints::BLOCK_USER | endpoints::UNBLOCK_USER | endpoints::DISPLAY_NAME)
+                && let Some(why) = error_message(&bytes)
+            {
+                log::warn!("{route}: HTTP 400, code {:?}: {why}", error_code(&bytes));
+                return Err(AppError::Invalid(tr!("Roblox said: {why}", why = why)));
+            }
             let e = vip_refusal(route, status, &headers, &bytes).unwrap_or_else(|| classify(status, &headers, &bytes));
             log::warn!("{route}: HTTP {status}, code {:?}: {e}", error_code(&bytes));
             if status == StatusCode::FORBIDDEN {
@@ -1140,6 +1149,14 @@ fn error_code(body: &[u8]) -> Option<(i64, i64)> {
     let v: Value = serde_json::from_slice(body).ok()?;
     let e = v.get("errors").and_then(|e| e.get(0)).unwrap_or(&v);
     Some((e.get("code")?.as_i64()?, e.get("subcode").and_then(Value::as_i64).unwrap_or(0)))
+}
+
+/// The first error's message in a Roblox error body, at most 160 characters.
+fn error_message(body: &[u8]) -> Option<String> {
+    let v: Value = serde_json::from_slice(body).ok()?;
+    let e = v.get("errors").and_then(|e| e.get(0)).unwrap_or(&v);
+    let m = e.get("userFacingMessage").or_else(|| e.get("message"))?.as_str()?.trim();
+    (!m.is_empty()).then(|| m.chars().take(160).collect())
 }
 
 /// A transport error, named by host only (no path or query).

@@ -7,263 +7,217 @@
 <title>MTwin Progress</title>
 <link rel="icon" type="image/png" href="/logo.png">
 <style>
+  /* MTwin Manager's Progress page, in a browser: the same games, the same game page. */
   :root {
-    --bg: #09090b; --s1: #111114; --s2: #18181c; --s3: #202026; --line: #26262d; --fg: #f3f3f5; --fg2: #a4a4ad; --fg3: #6c6c77;
-    --accent: #e5243b; --ok: #2fbf71; --warn: #e8a33d; --info: #3b8eea; --r: 3px;
+    --ground: #0a0a0b; --s1: #121214; --s2: #18181b; --s3: #222226; --line: #26262b; --line2: #34343a;
+    --fg: #f4f4f5; --fg2: #a1a1aa; --fg3: #71717a; --accent: #e5243b; --ok: #34c77b; --warn: #f0a33a; --info: #4c9aff;
+    --r: 10px; --rs: 6px;
     --mono: "Cascadia Mono", "Cascadia Code", Consolas, ui-monospace, monospace;
   }
   @media (prefers-color-scheme: light) {
-    :root:not([data-theme="dark"]) { --bg: #f2f2f4; --s1: #ffffff; --s2: #f4f4f6; --s3: #e9e9ee; --line: #dedee4; --fg: #131316; --fg2: #55555e; --fg3: #8a8a94; }
+    :root:not([data-theme="dark"]) { --ground: #f4f4f5; --s1: #ffffff; --s2: #f4f4f6; --s3: #e8e8ec; --line: #e2e2e7; --line2: #d4d4da; --fg: #131316; --fg2: #52525b; --fg3: #8b8b94; }
   }
-  :root[data-theme="light"] { --bg: #f2f2f4; --s1: #ffffff; --s2: #f4f4f6; --s3: #e9e9ee; --line: #dedee4; --fg: #131316; --fg2: #55555e; --fg3: #8a8a94; }
+  :root[data-theme="light"] { --ground: #f4f4f5; --s1: #ffffff; --s2: #f4f4f6; --s3: #e8e8ec; --line: #e2e2e7; --line2: #d4d4da; --fg: #131316; --fg2: #52525b; --fg3: #8b8b94; }
   * { box-sizing: border-box; }
-  html, body { height: 100%; }
-  body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.45 "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "Noto Sans Thai", sans-serif; }
+  body { margin: 0; background: var(--ground); color: var(--fg); font: 14px/1.45 "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "Noto Sans Thai", sans-serif; -webkit-font-smoothing: antialiased; }
   button, input, select, textarea { font: inherit; color: inherit; }
-  /* ---- top bar ---- */
-  .top { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 10px; height: 56px; padding: 0 16px; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
-  .top::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px; background: linear-gradient(90deg, var(--accent), transparent 40%); }
-  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: -0.01em; white-space: nowrap; }
-  .mark { width: 28px; height: 28px; border-radius: 6px; background: #000; object-fit: cover; }
-  .live { display: inline-flex; align-items: center; gap: 6px; color: var(--fg3); font-size: 12px; white-space: nowrap; }
-  .dot { width: 7px; height: 7px; border-radius: 1px; background: var(--fg3); flex: none; display: inline-block; }
+  button { cursor: pointer; }
+  [hidden] { display: none !important; }
+  svg { flex: none; }
+
+  /* ---- Controls, as in the app ---- */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 34px; padding: 0 13px; border-radius: var(--rs); border: 0; background: var(--s2); box-shadow: inset 0 0 0 1px var(--line); color: var(--fg); font-weight: 600; font-size: 13px; white-space: nowrap; }
+  .btn:hover { background: var(--s3); }
+  .btn.ghost { background: none; box-shadow: none; color: var(--fg2); }
+  .btn.ghost:hover { background: var(--s2); color: var(--fg); }
+  .btn.go { background: var(--accent); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.14); color: #fff; }
+  .btn.go:hover { background: color-mix(in srgb, var(--accent) 88%, #fff); }
+  .btn.sm { height: 30px; padding: 0 10px; font-size: 12.5px; }
+  .btn.icon { width: 34px; padding: 0; }
+  .btn[data-on] { color: var(--ok); }
+  .btn:disabled { opacity: 0.45; cursor: default; }
+  .field { height: 38px; width: 100%; padding: 0 12px; border-radius: var(--rs); border: 0; background: var(--s1); box-shadow: inset 0 0 0 1px var(--line); outline: none; }
+  .field:focus { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 70%, transparent); }
+  .search { position: relative; flex: 1; min-width: 180px; }
+  .search svg { position: absolute; left: 12px; top: 12px; color: var(--fg3); }
+  .search .field { padding-left: 36px; }
+  select.field { width: auto; padding-right: 30px; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath d='M2 3.5 5 6.5 8 3.5' fill='none' stroke='%23888' stroke-width='1.5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 11px center; }
+  .chip { display: inline-flex; align-items: center; gap: 7px; height: 34px; padding: 0 12px; border-radius: var(--rs); border: 0; background: var(--s1); box-shadow: inset 0 0 0 1px var(--line); color: var(--fg2); font-size: 13px; font-weight: 600; white-space: nowrap; }
+  .chip:hover { color: var(--fg); }
+  .chip .n { color: var(--fg3); font-weight: 500; font-variant-numeric: tabular-nums; }
+  .chip[aria-pressed="true"] { color: var(--fg); background: color-mix(in srgb, var(--accent) 12%, var(--s1)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 55%, transparent); }
+  .chip.sm { height: 28px; padding: 0 10px; font-size: 12.5px; }
+  .panel { background: var(--s1); border-radius: var(--r); box-shadow: inset 0 0 0 1px var(--line), inset 0 1px 0 color-mix(in srgb, var(--fg) 5%, transparent); }
+  .label { margin: 0; font-size: 11px; font-weight: 650; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg3); }
+  .meta { color: var(--fg3); font-size: 12.5px; }
+  .tag { display: inline-flex; align-items: center; height: 20px; padding: 0 7px; border-radius: 4px; font-size: 11.5px; font-weight: 600; background: var(--s3); color: var(--fg2); }
+  .tag.ok { background: color-mix(in srgb, var(--ok) 14%, transparent); color: var(--ok); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ok) 35%, transparent); }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--fg3); display: inline-block; flex: none; }
   .dot.on { background: var(--ok); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 20%, transparent); }
   .dot.err { background: var(--accent); }
-  .search { flex: 1; max-width: 420px; margin-left: auto; position: relative; }
-  .search input { width: 100%; height: 34px; padding: 0 34px 0 12px; border-radius: var(--r); border: 1px solid var(--line); background: var(--s1); outline: none; }
-  .search input:focus { border-color: var(--accent); }
-  .search kbd { position: absolute; right: 8px; top: 8px; font: 11px var(--mono); color: var(--fg3); border: 1px solid var(--line); border-radius: 2px; padding: 0 5px; }
-  .tb { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 11px; border-radius: var(--r); border: 1px solid var(--line); background: var(--s1); color: var(--fg2); font-size: 12.5px; cursor: pointer; white-space: nowrap; }
-  .tb:hover { color: var(--fg); border-color: color-mix(in srgb, var(--fg) 25%, var(--line)); }
-  .tb[data-on] { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 45%, var(--line)); }
-  .tb.go { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
-  .tb svg { flex: none; }
-  /* ---- layout ---- */
-  .shell { display: grid; grid-template-columns: 250px minmax(0, 1fr); min-height: calc(100vh - 56px); }
-  .rail { position: sticky; top: 56px; align-self: start; height: calc(100vh - 56px); overflow-y: auto; padding: 16px 14px; border-right: 1px solid var(--line); display: flex; flex-direction: column; gap: 20px; background: color-mix(in srgb, var(--fg) 1.5%, transparent); }
-  .rk { font-size: 10.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg3); margin: 0 0 8px; display: flex; align-items: center; gap: 7px; }
-  .rk::before { content: ""; width: 3px; height: 11px; background: var(--accent); }
-  .kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-  .kpi { padding: 10px; border: 1px solid var(--line); border-radius: var(--r); background: var(--s1); min-width: 0; }
-  .kpi b { display: block; font-size: 19px; font-weight: 700; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .kpi span { font-size: 11.5px; color: var(--fg3); }
-  .opts { display: flex; flex-direction: column; gap: 2px; }
-  .opt { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: var(--r); color: var(--fg2); cursor: pointer; border: 0; background: none; text-align: left; font-size: 13px; width: 100%; }
-  .opt:hover { background: var(--s2); color: var(--fg); }
-  .opt[aria-pressed="true"] { color: var(--fg); background: color-mix(in srgb, var(--accent) 10%, transparent); box-shadow: inset 2px 0 0 var(--accent); }
-  .opt .n { margin-left: auto; font-size: 11px; color: var(--fg3); font-variant-numeric: tabular-nums; }
-  .opt .box { width: 14px; height: 14px; border-radius: 2px; border: 1.5px solid var(--fg3); display: grid; place-items: center; flex: none; }
-  .opt[aria-pressed="true"] .box { background: var(--accent); border-color: var(--accent); }
-  .opt[aria-pressed="true"] .box::after { content: ""; width: 6px; height: 3px; border: 2px solid #fff; border-top: 0; border-right: 0; transform: rotate(-45deg) translate(1px, -1px); }
-  .seg { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
-  .seg button { border: 0; background: var(--s1); padding: 6px; color: var(--fg2); cursor: pointer; font-size: 12.5px; }
-  .seg button[aria-pressed="true"] { background: var(--s3); color: var(--fg); box-shadow: inset 0 -2px 0 var(--accent); }
-  .rail select { width: 100%; height: 32px; border-radius: var(--r); border: 1px solid var(--line); background: var(--s1); padding: 0 8px; }
-  main { padding: 18px 22px 60px; min-width: 0; }
-  .totals { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
-  .total { background: var(--s1); border: 1px solid var(--line); border-radius: var(--r); padding: 4px 10px; font-size: 12.5px; color: var(--fg2); }
-  .total b { color: var(--fg); font-weight: 700; }
-  .empty { text-align: center; color: var(--fg2); padding: 64px 16px; border: 1px dashed var(--line); border-radius: var(--r); }
-  .gh { display: flex; align-items: baseline; gap: 10px; margin: 18px 0 8px; }
-  .gh:first-child { margin-top: 0; }
-  .gh h2 { margin: 0; font-size: 15px; }
-  .gh span { color: var(--fg3); font-size: 12px; }
-  /* ---- table view ---- */
-  .tbl-wrap { border: 1px solid var(--line); border-radius: var(--r); overflow-x: auto; background: var(--s1); position: relative; }
-  .tbl-wrap::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px; background: linear-gradient(90deg, var(--accent), transparent 50%); }
-  table.acc { width: 100%; border-collapse: collapse; font-size: 13px; }
-  .acc th { text-align: left; font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg3); font-weight: 700; padding: 10px 10px; background: color-mix(in srgb, var(--fg) 3%, transparent); border-bottom: 1px solid var(--line); white-space: nowrap; }
-  .acc td { padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
-  .acc tr:last-child td { border-bottom: 0; }
-  .acc tbody tr:nth-child(even) td { background: color-mix(in srgb, var(--fg) 1.5%, transparent); }
-  .acc tbody tr:hover td { background: color-mix(in srgb, var(--fg) 4%, transparent); }
-  .acc tr.off td { color: var(--fg3); }
-  .acc tr.sel td { background: color-mix(in srgb, var(--accent) 7%, transparent) !important; }
-  .acc-who { display: flex; align-items: center; gap: 9px; min-width: 170px; }
-  .av { width: 30px; height: 30px; border-radius: 4px; background: var(--s3); flex: none; object-fit: cover; }
-  .nm { font-weight: 600; white-space: nowrap; }
-  .un { font-size: 11.5px; color: var(--fg3); }
-  .lv { font-weight: 700; font-variant-numeric: tabular-nums; }
-  .chips { display: flex; flex-wrap: wrap; gap: 4px; }
-  .chip { font-size: 11.5px; padding: 2px 7px; border-radius: 2px; background: var(--s2); border: 1px solid var(--line); color: var(--fg2); white-space: nowrap; }
-  .chip b { color: var(--fg); font-weight: 700; }
-  .st { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; white-space: nowrap; }
-  .st.on { color: var(--ok); } .st.off { color: var(--fg3); } .st.stale { color: var(--warn); }
+  .empty { text-align: center; color: var(--fg2); padding: 56px 16px; border-radius: var(--r); box-shadow: inset 0 0 0 1px var(--line); }
+
+  /* ---- Top bar ---- */
+  .top { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 8px; height: 56px; padding: 0 20px; background: var(--ground); border-bottom: 1px solid var(--line); }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 15px; white-space: nowrap; }
+  .mark { width: 26px; height: 26px; border-radius: 6px; background: #000; object-fit: cover; }
+  .live { display: inline-flex; align-items: center; gap: 7px; margin-left: 8px; height: 26px; padding: 0 10px; border-radius: 999px; background: var(--s1); box-shadow: inset 0 0 0 1px var(--line); color: var(--fg2); font-size: 12px; white-space: nowrap; }
+  .top .sp { flex: 1; }
+
+  /* ---- Page ---- */
+  .page { max-width: 1180px; margin: 0 auto; padding: 26px 24px 80px; }
+  .head { display: flex; align-items: flex-end; gap: 16px; margin-bottom: 22px; }
+  .head h1 { margin: 0; font-size: 22px; letter-spacing: -0.02em; }
+  .head p { margin: 2px 0 0; color: var(--fg2); font-size: 13px; }
+  .head .acts { margin-left: auto; display: flex; gap: 6px; }
+  .strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 26px; }
+  .tile { padding: 14px 16px; display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .tile .k { font-size: 12.5px; color: var(--fg2); }
+  .tile .v { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+  .tile .v.ok { color: var(--ok); }
+  .tile .ico { width: 36px; height: 36px; border-radius: 8px; background: var(--s3); display: grid; place-items: center; font-size: 11px; font-weight: 700; color: var(--fg2); flex: none; overflow: hidden; }
+  .tile .ico img { width: 100%; height: 100%; object-fit: contain; }
+  .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 10px 0 14px; }
+
+  /* ---- Games ---- */
+  .games { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+  .game { display: flex; flex-direction: column; text-align: left; border: 0; padding: 0; color: inherit; transition: box-shadow 0.15s; }
+  .game:hover { box-shadow: inset 0 0 0 1px var(--line2), inset 0 1px 0 color-mix(in srgb, var(--fg) 6%, transparent); }
+  .game .gt { display: flex; align-items: center; gap: 12px; padding: 14px; }
+  .game .gi { width: 48px; height: 48px; border-radius: 8px; background: var(--s3); display: grid; place-items: center; font-weight: 700; color: var(--fg2); flex: none; overflow: hidden; }
+  .game .gi img { width: 100%; height: 100%; object-fit: cover; }
+  .game .gn { font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .game .gs { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); }
+  .game .gs div { padding: 10px 6px; text-align: center; }
+  .game .gs div + div { border-left: 1px solid var(--line); }
+  .game .gs b { display: block; font-size: 16px; font-variant-numeric: tabular-nums; }
+  .game .gs b.ok { color: var(--ok); }
+  .game .gs span { font-size: 11.5px; color: var(--fg3); }
+
+  /* ---- A game ---- */
+  .gh { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
+  .gh h1 { margin: 0; font-size: 20px; letter-spacing: -0.02em; }
+  .gh .pcs { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
+  .tabs { display: inline-flex; gap: 2px; padding: 3px; border-radius: 8px; background: var(--s1); box-shadow: inset 0 0 0 1px var(--line); margin-bottom: 4px; }
+  .tab { display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 12px; border-radius: 6px; border: 0; background: none; color: var(--fg2); font-size: 13px; font-weight: 600; }
+  .tab .n { color: var(--fg3); font-weight: 500; }
+  .tab[aria-selected="true"] { background: var(--s3); color: var(--fg); }
+
+  /* Items */
+  .items { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .item { --c: #8b8b94; position: relative; padding: 10px 10px 12px; border-radius: var(--r); background: linear-gradient(180deg, color-mix(in srgb, var(--c) 14%, var(--s1)), var(--s1) 70%); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 45%, var(--line)); display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; }
+  .item .rar { align-self: flex-start; font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; color: var(--c); background: color-mix(in srgb, var(--c) 18%, transparent); max-width: 70%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .item .rar.none { visibility: hidden; }
+  .item .cnt { position: absolute; top: 10px; right: 10px; font-size: 12px; font-weight: 700; color: var(--fg2); }
+  .item .pic, .item .nopic { width: 72px; height: 72px; border-radius: 8px; }
+  .item .pic { object-fit: contain; }
+  .item .nopic { display: grid; place-items: center; font-weight: 700; font-size: 22px; color: var(--c); background: color-mix(in srgb, var(--c) 16%, var(--s2)); }
+  .item .nm { font-size: 13px; font-weight: 600; text-align: center; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .item .cat { font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--fg3); }
+  .pager { display: flex; align-items: center; gap: 8px; justify-content: flex-end; margin-top: 14px; color: var(--fg2); font-size: 13px; }
+
+  /* Accounts */
+  .tbl { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--fg3); font-weight: 650; padding: 11px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  td { padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  tr:last-child td { border-bottom: 0; }
+  tbody tr:hover td { background: color-mix(in srgb, var(--fg) 3%, transparent); }
+  tr.off td { color: var(--fg3); }
+  tr.sel td { background: color-mix(in srgb, var(--accent) 7%, transparent) !important; }
+  .who { display: flex; align-items: center; gap: 10px; min-width: 170px; }
+  .av { width: 32px; height: 32px; border-radius: 50%; background: var(--s3); flex: none; object-fit: cover; }
+  .nm2 { font-weight: 600; white-space: nowrap; }
+  .un { font-size: 12px; color: var(--fg3); }
+  .num { font-weight: 700; font-variant-numeric: tabular-nums; }
+  .vals { display: flex; flex-wrap: wrap; gap: 4px; }
+  .val { font-size: 12px; padding: 2px 8px; border-radius: 4px; background: var(--s2); box-shadow: inset 0 0 0 1px var(--line); color: var(--fg2); white-space: nowrap; }
+  .val b { color: var(--fg); }
+  .st { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; white-space: nowrap; }
+  .st.on { color: var(--ok); } .st.off { color: var(--fg3); } .st.slow { color: var(--warn); }
   .cbx { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
-  .err { color: var(--warn); font-size: 11.5px; }
-  .copy { border: 0; background: none; color: var(--fg3); cursor: pointer; padding: 0 2px; font-size: 11px; }
+  .err { color: var(--warn); font-size: 12px; }
+  .copy { border: 0; background: none; color: var(--fg3); padding: 0 2px; font-size: 11px; }
   .copy:hover { color: var(--fg); }
-  /* ---- card view ---- */
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
-  .card { position: relative; background: var(--s1); border: 1px solid var(--line); border-radius: var(--r); padding: 12px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
-  .card::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px; background: linear-gradient(90deg, var(--accent), transparent 60%); }
-  .card.off { opacity: 0.6; }
-  .card .top2 { display: flex; align-items: center; gap: 10px; }
-  .card .lvb { margin-left: auto; text-align: right; }
-  .card .lvb b { display: block; font-size: 18px; line-height: 1; }
-  .card .lvb span { font-size: 10px; color: var(--fg3); text-transform: uppercase; letter-spacing: 0.06em; }
-  .card .foot { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--fg3); }
-  .card .foot .cbx { margin-left: auto; }
-  /* ---- script runner ---- */
-  .drawer { position: fixed; right: 0; top: 56px; bottom: 0; width: min(520px, 100vw); z-index: 30; background: var(--s1); border-left: 1px solid var(--line); box-shadow: -20px 0 50px rgb(0 0 0 / 0.35); display: flex; flex-direction: column; transform: translateX(105%); transition: transform 0.22s ease; }
-  .drawer[data-open] { transform: none; }
-  .dr-h { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
-  .dr-h b { font-size: 15px; }
-  .dr-h .x { margin-left: auto; width: 30px; height: 30px; border-radius: var(--r); border: 1px solid var(--line); background: var(--s2); cursor: pointer; }
-  .dr-b { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; flex: 1; }
-  .who-line { font-size: 12.5px; color: var(--fg2); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .who-line b { color: var(--fg); }
+
+  /* Script */
+  .run { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 12px; align-items: start; }
+  .run .panel { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
   .snips { display: flex; gap: 6px; flex-wrap: wrap; }
-  .snips button { font-size: 12px; padding: 4px 8px; border-radius: 2px; border: 1px solid var(--line); background: var(--s2); color: var(--fg2); cursor: pointer; }
-  .snips button:hover { color: var(--fg); }
-  textarea.code { min-height: 200px; resize: vertical; padding: 12px; border-radius: var(--r); border: 1px solid var(--line); background: #0b0b0e; color: #e2e2e8; font: 12.5px/1.6 var(--mono); tab-size: 4; outline: none; white-space: pre; }
-  textarea.code:focus { border-color: var(--accent); }
-  .dr-acts { display: flex; align-items: center; gap: 8px; }
-  .dr-acts .hint { font-size: 12px; color: var(--fg3); margin-right: auto; }
-  .res { display: flex; flex-direction: column; gap: 6px; }
-  .rc { border: 1px solid var(--line); border-radius: var(--r); background: var(--s2); }
-  .rc-h { display: flex; align-items: center; gap: 8px; padding: 7px 10px; font-size: 12.5px; }
+  textarea.code { min-height: 240px; resize: vertical; padding: 12px; border-radius: var(--rs); border: 0; box-shadow: inset 0 0 0 1px var(--line); background: color-mix(in srgb, #000 35%, var(--s1)); color: var(--fg); font: 12.5px/1.6 var(--mono); tab-size: 4; outline: none; white-space: pre; }
+  textarea.code:focus { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 70%, transparent); }
+  .acts { display: flex; align-items: center; gap: 8px; }
+  .acts .meta { margin-right: auto; }
+  .res { display: flex; flex-direction: column; gap: 6px; max-height: 560px; overflow: auto; }
+  .rc { border-radius: var(--rs); background: var(--s2); box-shadow: inset 0 0 0 1px var(--line); }
+  .rc-h { display: flex; align-items: center; gap: 8px; padding: 8px 10px; font-size: 12.5px; }
   .rc-h .t { margin-left: auto; color: var(--fg3); font-size: 11.5px; }
-  .pill { font-size: 10px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; padding: 1px 6px; border-radius: 2px; }
-  .pill.wait { color: var(--fg2); background: var(--s3); } .pill.run { color: var(--info); background: color-mix(in srgb, var(--info) 15%, transparent); }
+  .pill { font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 4px; }
+  .pill.wait { color: var(--fg2); background: var(--s3); } .pill.busy { color: var(--info); background: color-mix(in srgb, var(--info) 15%, transparent); }
   .pill.ok { color: var(--ok); background: color-mix(in srgb, var(--ok) 15%, transparent); } .pill.bad { color: var(--warn); background: color-mix(in srgb, var(--warn) 15%, transparent); }
   .rc pre { margin: 0; padding: 8px 10px; border-top: 1px solid var(--line); font: 12px/1.5 var(--mono); color: var(--fg2); white-space: pre-wrap; word-break: break-word; max-height: 180px; overflow: auto; }
-  .rc .sc { color: var(--fg3); font: 11.5px var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
-  /* Inventory */
-  .inv { margin-top: 34px; padding-top: 22px; border-top: 1px solid var(--line); }
-  .inv-head { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; margin-bottom: 12px; }
-  .inv-head h2 { margin: 0; font-size: 11.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--fg2); }
-  .inv-head .sum { color: var(--fg2); font-size: 13px; margin-top: 4px; }
-  .inv-head .sum b { color: var(--fg); font-size: 15px; }
-  .inv-tools { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
-  .inv-tools input, .inv-tools select { height: 34px; border-radius: 8px; border: 1px solid var(--line); background: var(--s1); color: var(--fg); font: inherit; font-size: 13px; padding: 0 10px; }
-  .inv-tabs { display: flex; gap: 4px; flex-wrap: wrap; border-bottom: 1px solid var(--line); margin-bottom: 14px; }
-  .inv-tab { background: none; border: 0; border-bottom: 2px solid transparent; color: var(--fg3); font: inherit; font-size: 13px; padding: 8px 10px; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
-  .inv-tab[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--accent); font-weight: 600; }
-  .inv-tab b { font-size: 11px; padding: 0 6px; border-radius: 999px; background: var(--s2); color: var(--fg3); font-weight: 600; }
-  .inv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
-  .icard { --r: #8a8a94; position: relative; border-radius: 8px; padding: 10px; background: color-mix(in srgb, var(--r) 8%, var(--s1)); border: 1px solid color-mix(in srgb, var(--r) 45%, var(--line)); display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; }
-  .icard .rar { align-self: flex-start; font-size: 9.5px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; color: #fff; background: var(--r); max-width: 70%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .icard .cnt { position: absolute; top: 9px; right: 9px; font-size: 11px; font-weight: 700; color: var(--fg2); background: var(--s2); border-radius: 999px; padding: 1px 7px; }
-  .icard .pic { width: 84px; height: 84px; object-fit: contain; border-radius: 6px; }
-  .icard .nopic { width: 84px; height: 84px; border-radius: 6px; background: var(--s2); display: grid; place-items: center; color: var(--fg3); font-weight: 700; font-size: 20px; }
-  .icard .nm { font-size: 12.5px; font-weight: 600; color: var(--r); text-align: center; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .icard .who { font-size: 11px; color: var(--fg3); }
-  .inv-foot { display: flex; align-items: center; gap: 10px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); color: var(--fg2); font-size: 13px; }
-  .inv-foot .pager { margin-left: auto; display: flex; align-items: center; gap: 8px; }
-  .pbtn { height: 32px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--s1); color: var(--fg); font: inherit; font-size: 13px; cursor: pointer; }
-  .pbtn:disabled { opacity: 0.45; cursor: default; }
-  /* Sheet sync dialog: MTwin's own, a numbered rail of three steps. */
-  dialog { border: 1px solid var(--line); border-radius: 14px; background: var(--bg); color: var(--fg); padding: 0; width: min(520px, calc(100vw - 32px)); box-shadow: 0 24px 60px rgb(0 0 0 / 0.45); }
-  dialog::backdrop { background: rgb(0 0 0 / 0.6); backdrop-filter: blur(2px); }
-  .sx-top { position: relative; padding: 20px 22px 16px; border-bottom: 1px solid var(--line); background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 10%, transparent), transparent); }
-  .sx-top h3 { margin: 0; font-size: 17px; letter-spacing: -0.01em; display: flex; align-items: center; gap: 8px; }
-  .sx-top h3 i { width: 8px; height: 8px; border-radius: 2px; background: var(--accent); display: inline-block; }
+
+  /* Sheet sync */
+  dialog { border: 0; border-radius: 14px; background: var(--s1); color: var(--fg); padding: 0; width: min(520px, calc(100vw - 32px)); box-shadow: inset 0 0 0 1px var(--line), 0 24px 60px rgb(0 0 0 / 0.45); }
+  dialog::backdrop { background: rgb(0 0 0 / 0.6); }
+  .sx-top { position: relative; padding: 20px 22px 14px; border-bottom: 1px solid var(--line); }
+  .sx-top h3 { margin: 0; font-size: 17px; }
   .sx-top p { margin: 4px 0 0; color: var(--fg2); font-size: 12.5px; }
-  .sx-top .x { position: absolute; top: 14px; right: 14px; width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--line); background: var(--s1); color: var(--fg2); font-size: 16px; cursor: pointer; }
-  .sx-steps { list-style: none; margin: 0; padding: 18px 22px 6px; display: flex; flex-direction: column; }
+  .sx-top .btn { position: absolute; top: 14px; right: 14px; }
+  .sx-steps { list-style: none; margin: 0; padding: 18px 22px 4px; display: flex; flex-direction: column; }
   .sx-step { position: relative; display: grid; grid-template-columns: 28px 1fr; gap: 0 12px; padding-bottom: 18px; }
   .sx-step::before { content: ""; position: absolute; left: 13.5px; top: 30px; bottom: 2px; width: 1px; background: var(--line); }
   .sx-step:last-child::before { display: none; }
-  .sx-n { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; font-size: 12.5px; font-weight: 700; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--s1)); border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line)); }
-  .sx-step[data-done] .sx-n { color: #fff; background: var(--accent); border-color: var(--accent); }
+  .sx-n { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 12.5px; font-weight: 700; color: var(--fg2); background: var(--s3); }
+  .sx-step[data-done] .sx-n { color: #fff; background: var(--ok); }
   .sx-b { min-width: 0; display: flex; flex-direction: column; gap: 8px; }
   .sx-b b { font-size: 13.5px; line-height: 28px; }
-  .sx-b small { color: var(--fg3); font-size: 12px; margin-top: -6px; }
-  .sx-b small a { color: var(--accent); }
-  .sx-code { display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 12px; border-radius: 8px; background: var(--s1); border: 1px solid var(--line); }
-  .sx-code code { flex: 1; min-width: 0; font: 12px ui-monospace, Consolas, monospace; color: var(--fg2); white-space: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .sx-b small { color: var(--fg3); font-size: 12px; margin-top: -4px; }
+  .sx-b small a { color: var(--fg); }
+  .sx-code { display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 12px; border-radius: var(--rs); background: var(--s2); box-shadow: inset 0 0 0 1px var(--line); }
+  .sx-code code { flex: 1; min-width: 0; font: 12px var(--mono); color: var(--fg2); white-space: nowrap; overflow-x: auto; scrollbar-width: none; }
   .sx-code code em { font-style: normal; color: var(--fg3); padding: 0 4px; }
-  .sx-in { height: 38px; border-radius: 8px; border: 1px solid var(--line); background: var(--s1); color: var(--fg); font: 12.5px ui-monospace, Consolas, monospace; padding: 0 12px; }
-  .sx-in:focus { outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent); outline-offset: -1px; }
-  .sx-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .dlg-msg { font-size: 12.5px; color: var(--fg2); }
-  .dlg-msg.ok { color: var(--ok); } .dlg-msg.bad { color: var(--accent); }
+  .msg { font-size: 12.5px; color: var(--fg2); }
+  .msg.ok { color: var(--ok); } .msg.bad { color: var(--accent); }
   .sx-foot { display: flex; align-items: center; gap: 8px; padding: 14px 22px 18px; border-top: 1px solid var(--line); }
   .sx-foot .sp { flex: 1; }
-  .btn2 { height: 34px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--s1); color: var(--fg); font: inherit; font-size: 13px; cursor: pointer; }
-  .btn2.go { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
-  .btn2.ghost { background: none; border-color: transparent; color: var(--fg2); }
-  .btn2.sm { height: 30px; padding: 0 10px; font-size: 12.5px; }
-  @media (max-width: 860px) {
-    .shell { grid-template-columns: minmax(0, 1fr); }
-    .rail { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); }
+
+  @media (max-width: 800px) {
     .top .lbl { display: none; }
+    .run { grid-template-columns: minmax(0, 1fr); }
+    .page { padding: 18px 14px 60px; }
   }
 </style>
 </head>
 <body>
 <header class="top">
-  <div class="brand"><img class="mark" src="/logo.png" alt="" width="28" height="28"><span>MTwin Progress</span></div>
+  <div class="brand"><img class="mark" src="/logo.png" alt="" width="26" height="26"><span>MTwin Progress</span></div>
   <span class="live"><span id="dot" class="dot"></span><span id="status">Connecting…</span></span>
-  <div class="search"><input type="search" id="q" placeholder="Search accounts, items, values…" autocomplete="off"><kbd>/</kbd></div>
-  <button class="tb go" id="runBtn" type="button" hidden><svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2.8v10.4L13 8z"/></svg><span class="lbl">Run script</span></button>
-  <button class="tb" id="sheetBtn" type="button" title="Sheet sync"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M2 6h12M2 10h12M6 6v8"/></svg><span class="lbl" id="sheetLabel">Sheet sync</span></button>
-  <button class="tb" id="csvBtn" type="button" title="Download the accounts shown as CSV"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2.5v8M4.5 7 8 10.5 11.5 7M3 13.5h10"/></svg><span class="lbl">CSV</span></button>
-  <button class="tb" id="pauseBtn" type="button" title="Pause live updates"><svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><rect x="4" y="3" width="3" height="10"/><rect x="9" y="3" width="3" height="10"/></svg></button>
-  <button class="tb" id="theme" type="button" title="Light / dark" aria-label="Light / dark"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 2a6 6 0 0 1 0 12z" fill="currentColor"/></svg></button>
+  <span class="sp"></span>
+  <button class="btn ghost" id="sheetBtn" type="button" title="Keep a Google Sheet up to date"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M2 6h12M2 10h12M6 6v8"/></svg><span class="lbl" id="sheetLabel">Sheet sync</span></button>
+  <button class="btn ghost" id="csvBtn" type="button" title="Download as CSV"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2.5v8M4.5 7 8 10.5 11.5 7M3 13.5h10"/></svg><span class="lbl">CSV</span></button>
+  <button class="btn ghost icon" id="pauseBtn" type="button" title="Pause live updates"></button>
+  <button class="btn ghost icon" id="theme" type="button" title="Light / dark" aria-label="Light / dark"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 2a6 6 0 0 1 0 12z" fill="currentColor"/></svg></button>
 </header>
-<div class="shell">
-  <aside class="rail">
-    <section><p class="rk">Overview</p><div class="kpis" id="stats"></div></section>
-    <section><p class="rk">Status</p><div class="opts" id="shows"></div></section>
-    <section id="gamesSec"><p class="rk">Games</p><div class="opts" id="games"></div></section>
-    <section><p class="rk">Sort</p>
-      <select id="sort" aria-label="Sort">
-        <option value="game">By game</option>
-        <option value="level">Highest level</option>
-        <option value="seen">Last report</option>
-        <option value="name">Name</option>
-      </select>
-    </section>
-    <section><p class="rk">View</p><div class="seg" id="views"><button type="button" data-view="table">Table</button><button type="button" data-view="cards">Cards</button></div></section>
-  </aside>
-  <main>
-    <div class="totals" id="totals"></div>
-    <div id="list"></div>
-    <section class="inv" id="inv" hidden>
-    <div class="inv-head">
-      
-      <div class="inv-tools">
-        <select id="invWho" aria-label="Account"></select>
-        <input type="search" id="invQ" placeholder="Search items…" autocomplete="off">
-      </div>
-    </div>
-    <div class="inv-tabs" id="invTabs" role="tablist"></div>
-    <div class="inv-grid" id="invGrid"></div>
-    <div class="inv-foot"><span id="invShowing"></span><div class="pager"><button class="pbtn" id="invPrev" type="button">Prev</button><span id="invPage"></span><button class="pbtn" id="invNext" type="button">Next</button></div></div>
-  </section>
-  </main>
-</div>
-<aside class="drawer" id="drawer" aria-label="Run script">
-  <div class="dr-h"><svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor" style="color:var(--accent)"><path d="M4 2.8v10.4L13 8z"/></svg><b>Run script</b><button class="x" id="drClose" type="button" aria-label="Close">×</button></div>
-  <div class="dr-b">
-    <div class="who-line" id="target"></div>
-    <div class="snips" id="snips"></div>
-    <textarea class="code" id="code" spellcheck="false" placeholder="-- Lua, run in each client's executor&#10;print(game.Players.LocalPlayer.Name)"></textarea>
-    <div class="dr-acts"><span class="hint">Ctrl+Enter runs it. print() shows below.</span><button class="tb" id="clearRes" type="button">Clear</button><button class="tb go" id="runGo" type="button">Run</button></div>
-    <p class="rk" style="margin-top:6px">Results</p>
-    <div class="res" id="res"><div class="empty" style="padding:24px">Nothing run yet.</div></div>
-  </div>
-</aside>
+<div class="page" id="page"></div>
 <dialog id="sheet">
   <div class="sx-top">
-    <h3><i></i>Sheet sync</h3>
+    <h3>Sheet sync</h3>
     <p>Keep a Google Sheet up to date with every account's progress, through SheetDB.</p>
-    <button class="x" id="sheetClose" type="button" aria-label="Close">×</button>
+    <button class="btn ghost icon" id="sheetClose" type="button" aria-label="Close">✕</button>
   </div>
   <ol class="sx-steps">
     <li class="sx-step" id="stepCopy"><span class="sx-n">1</span><div class="sx-b"><b>Put the header row in your sheet</b>
-      <div class="sx-code"><code id="cols"></code><button class="btn2 sm" id="sheetCopy" type="button">Copy</button></div>
+      <div class="sx-code"><code id="cols"></code><button class="btn sm" id="sheetCopy" type="button">Copy</button></div>
       <small>Paste it into cell A1. <span id="colN"></span> columns.</small></div></li>
     <li class="sx-step" id="stepUrl"><span class="sx-n">2</span><div class="sx-b"><b>Connect it</b>
-      <input class="sx-in" id="sheetUrl" placeholder="https://sheetdb.io/api/v1/..." autocomplete="off" spellcheck="false">
+      <input class="field" id="sheetUrl" placeholder="https://sheetdb.io/api/v1/..." autocomplete="off" spellcheck="false">
       <small>Make an API for the sheet on <a href="https://sheetdb.io" target="_blank" rel="noopener">sheetdb.io</a> with Create and Delete allowed, and paste its URL.</small></div></li>
     <li class="sx-step" id="stepCheck"><span class="sx-n">3</span><div class="sx-b"><b>Check it</b>
-      <div class="sx-row"><button class="btn2 sm" id="sheetVerify" type="button">Check connection</button><span class="dlg-msg" id="sheetMsg"></span></div>
+      <div class="acts"><button class="btn sm" id="sheetVerify" type="button">Check connection</button><span class="msg" id="sheetMsg"></span></div>
       <small>Once saved, it updates every minute while this page is open.</small></div></li>
   </ol>
-  <div class="sx-foot"><button class="btn2 ghost" id="sheetOff" type="button">Turn off</button><span class="sp"></span><button class="btn2" id="sheetCancel" type="button">Cancel</button><button class="btn2 go" id="sheetSave" type="button">Save</button></div>
+  <div class="sx-foot"><button class="btn ghost" id="sheetOff" type="button">Turn off</button><span class="sp"></span><button class="btn" id="sheetCancel" type="button">Cancel</button><button class="btn go" id="sheetSave" type="button">Save</button></div>
 </dialog>
 <script>
 (() => {
@@ -287,10 +241,27 @@
     if (s < 86400) return Math.floor(s / 3600) + "h ago";
     return Math.floor(s / 86400) + "d ago";
   };
-  const store = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch {} return null; };
-  let data = null, show = "all", failed = 0, paused = false;
-  let view = store("mtwin.webView") === "cards" ? "cards" : "table";
+  const initials = (s) => (String(s || "?").match(/\b\w/g) || ["?"]).slice(0, 2).join("").toUpperCase();
+  const store = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch {} return null; };
+  const I = {
+    search: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="4.5"/><path d="m10.5 10.5 3 3"/></svg>',
+    back: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 3 5 8l5 5"/></svg>',
+    grid: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2.5" y="2.5" width="4.5" height="4.5" rx="1"/><rect x="9" y="2.5" width="4.5" height="4.5" rx="1"/><rect x="2.5" y="9" width="4.5" height="4.5" rx="1"/><rect x="9" y="9" width="4.5" height="4.5" rx="1"/></svg>',
+    user: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5.5" r="2.8"/><path d="M2.8 14c.6-2.8 2.7-4.3 5.2-4.3s4.6 1.5 5.2 4.3"/></svg>',
+    code: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1.5" y="2.5" width="13" height="11" rx="2"/><path d="m4.5 6.5 2 1.5-2 1.5M8 10h3.5"/></svg>',
+    play: '<svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2.8v10.4L13 8z"/></svg>',
+    pause: '<svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><rect x="4" y="3" width="3" height="10" rx="1"/><rect x="9" y="3" width="3" height="10" rx="1"/></svg>',
+    pc: '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="8" rx="1.5"/><path d="M5.5 13.5h5"/></svg>',
+  };
+
+  // What's on screen: the games, or one game (by id) and its tab. Kept in the address (#game=…).
+  let data = null, failed = 0, paused = false;
+  const ui = { game: null, tab: "items", pc: "*", gq: "", gshow: "all", aq: "", sort: "level", iq: "", icat: "*", irar: "*", ipage: 0 };
   const picked = new Set();
+  const fromHash = () => { const m = /game=([^&]+)/.exec(location.hash); ui.game = m ? decodeURIComponent(m[1]) : null; };
+  fromHash();
+  window.addEventListener("hashchange", () => { fromHash(); render(true); });
+  const go = (game) => { location.hash = game ? "game=" + encodeURIComponent(game) : ""; };
 
   const t0 = store("mtwin.webTheme"); if (t0) document.documentElement.dataset.theme = t0;
   $("theme").onclick = () => {
@@ -299,164 +270,258 @@
     root.dataset.theme = dark ? "light" : "dark";
     store("mtwin.webTheme", root.dataset.theme);
   };
-  $("q").oninput = render;
-  $("sort").onchange = render;
-  document.querySelectorAll("[data-view]").forEach((b) => (b.onclick = () => { view = b.dataset.view; store("mtwin.webView", view); render(); }));
+  const pauseIcon = () => { $("pauseBtn").innerHTML = paused ? I.play : I.pause; $("pauseBtn").title = paused ? "Resume live updates" : "Pause live updates"; };
+  pauseIcon();
   $("pauseBtn").onclick = () => {
     paused = !paused;
-    $("pauseBtn").title = paused ? "Resume live updates" : "Pause live updates";
-    $("pauseBtn").innerHTML = paused ? '<svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2.8v10.4L13 8z"/></svg>' : '<svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><rect x="4" y="3" width="3" height="10"/><rect x="9" y="3" width="3" height="10"/></svg>';
+    pauseIcon();
     if (paused) { $("status").textContent = "Paused"; $("dot").className = "dot"; } else load();
   };
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "/" && document.activeElement?.tagName !== "INPUT" && document.activeElement?.tagName !== "TEXTAREA") { e.preventDefault(); $("q").focus(); }
-    if (e.key === "Escape" && document.activeElement === $("q")) { $("q").value = ""; render(); $("q").blur(); }
-  });
 
+  // ---- Games from the accounts ----
+  function gamesOf(accounts) {
+    const games = new Map();
+    for (const a of accounts) {
+      const g = games.get(a.gameId) || { id: a.gameId, name: a.gameName || "Unknown game", accounts: [], online: 0, items: 0 };
+      g.accounts.push(a);
+      if (a.online) g.online++;
+      g.items += a.items.reduce((n, i) => n + (i.count || 1), 0);
+      games.set(a.gameId, g);
+    }
+    return [...games.values()];
+  }
+  const imageOf = (id) => (id && data.images && data.images[id]) || null;
+  const pic = (gameId, item) => imageOf(item.image || (data.catalogImages && data.catalogImages[gameId] && data.catalogImages[gameId][item.id]) || "");
+
+  // Inputs keep focus across a redraw: only what changed is drawn again, the bars stay.
+  function render(full) {
+    if (!data) return;
+    const games = gamesOf(data.accounts);
+    const g = ui.game != null && games.find((x) => String(x.id) === String(ui.game));
+    if (ui.game != null && !g && games.length) { go(null); return; }
+    const mode = g ? "game:" + g.id : "games";
+    if (full || $("page").dataset.mode !== mode) {
+      $("page").dataset.mode = mode;
+      $("page").innerHTML = g ? gameShell(g) : gamesShell();
+      wire(g);
+    }
+    if (g) drawGame(g); else drawGames(games);
+  }
+
+  // ---- The games ----
+  function gamesShell() {
+    return `<div class="head"><div><h1>Progress</h1><p>Live stats from your alts, sent by the script running in each client.</p></div></div>
+      <div class="strip" id="strip"></div>
+      <p class="label">Games</p>
+      <div class="bar" id="gshow"></div>
+      <div class="bar"><label class="search">${I.search}<input class="field" id="gq" type="search" placeholder="Search games" autocomplete="off" value="${esc(ui.gq)}"></label></div>
+      <div id="games"></div>`;
+  }
+  function drawGames(games) {
+    const all = data.accounts;
+    const online = all.filter((a) => a.online).length;
+    $("strip").innerHTML = [
+      ["Accounts", `<span class="ok">${online}</span> <span class="meta">online · ${all.length} reporting</span>`],
+      ["Games", games.length],
+      ["Items held", num(games.reduce((n, x) => n + x.items, 0))],
+    ].map(([k, v]) => `<div class="panel tile"><div style="min-width:0"><div class="k">${k}</div><div class="v">${v}</div></div></div>`).join("");
+    const running = games.filter((x) => x.online);
+    $("gshow").innerHTML = [["all", "All", games.length, I.grid], ["running", "Running", running.length, I.play]]
+      .map(([k, l, n, ic]) => `<button class="chip" type="button" data-gshow="${k}" aria-pressed="${ui.gshow === k}">${ic}${l}<span class="n">${n}</span></button>`).join("");
+    $("gshow").querySelectorAll("[data-gshow]").forEach((b) => (b.onclick = () => { ui.gshow = b.dataset.gshow; render(); }));
+    const q = ui.gq.trim().toLowerCase();
+    const shown = (ui.gshow === "running" ? running : games).filter((x) => !q || x.name.toLowerCase().includes(q)).sort((x, y) => y.online - x.online || x.name.localeCompare(y.name));
+    if (!all.length) { $("games").innerHTML = `<div class="empty">No reports yet. Run the Progress script in your executor (MTwin Manager › Progress › Get script); accounts show up here within a few seconds.</div>`; return; }
+    if (!shown.length) { $("games").innerHTML = `<div class="empty">No games match.</div>`; return; }
+    $("games").innerHTML = `<div class="games">${shown.map((x) => `
+      <button class="panel game" type="button" data-game="${esc(x.id)}">
+        <div class="gt"><span class="gi">${esc(initials(x.name))}</span><div style="min-width:0"><div class="gn">${esc(x.name)}</div><span class="meta">${x.online ? "Running" : "Last report " + ago(data.now - Math.max(...x.accounts.map((a) => a.lastSeen)))}</span></div></div>
+        <div class="gs"><div><b class="${x.online ? "ok" : ""}">${x.online}</b><span>Online now</span></div><div><b>${x.accounts.length}</b><span>Accounts</span></div><div><b>${num(x.items)}</b><span>Items</span></div></div>
+      </button>`).join("")}</div>`;
+    $("games").querySelectorAll("[data-game]").forEach((b) => (b.onclick = () => go(b.dataset.game)));
+  }
+
+  // ---- A game ----
+  function gameShell(g) {
+    const tabs = [["items", "Items", I.grid], ["accounts", "Accounts", I.user]].concat(EXEC ? [["script", "Script", I.code]] : []);
+    return `<div class="gh"><button class="btn ghost icon" type="button" id="back" aria-label="All games">${I.back}</button><h1>${esc(g.name)}</h1><div class="pcs" id="pcs"></div></div>
+      <div class="strip" id="strip"></div>
+      <div class="tabs" role="tablist">${tabs.map(([k, l, ic]) => `<button class="tab" role="tab" type="button" data-tab="${k}" aria-selected="${ui.tab === k}">${ic}${l}<span class="n" id="n-${k}"></span></button>`).join("")}</div>
+      <section id="t-items" ${ui.tab === "items" ? "" : "hidden"}>
+        <div class="bar"><span class="meta" id="isum"></span><span id="icats" style="display:contents"></span>
+          <select class="field" id="irar" aria-label="Rarity"></select>
+          <label class="search">${I.search}<input class="field" id="iq" type="search" placeholder="Search items" autocomplete="off" value="${esc(ui.iq)}"></label></div>
+        <div id="items"></div>
+      </section>
+      <section id="t-accounts" ${ui.tab === "accounts" ? "" : "hidden"}>
+        <div class="bar"><label class="search">${I.search}<input class="field" id="aq" type="search" placeholder="Search accounts, values" autocomplete="off" value="${esc(ui.aq)}"></label>
+          <select class="field" id="sort" aria-label="Sort"><option value="level">Highest level</option><option value="online">Online first</option><option value="seen">Last report</option><option value="name">Name</option></select></div>
+        <div class="panel tbl" id="accs"></div>
+      </section>
+      ${EXEC ? `<section id="t-script" ${ui.tab === "script" ? "" : "hidden"}>
+        <div class="run" style="margin-top:10px">
+          <div class="panel">
+            <div class="acts"><b>Run a script</b><span class="meta" id="target" style="margin-left:auto;margin-right:0"></span></div>
+            <div class="snips" id="snips"></div>
+            <textarea class="code" id="code" spellcheck="false" placeholder="-- Lua, run in each client's executor&#10;print(game.Players.LocalPlayer.Name)"></textarea>
+            <div class="acts"><span class="meta">Ctrl+Enter runs it. print() shows in the results.</span><button class="btn go" id="runGo" type="button">${I.play}Run</button></div>
+          </div>
+          <div class="panel"><div class="acts"><b>Results</b><button class="btn ghost sm" id="clearRes" type="button" style="margin-left:auto">Clear</button></div><div class="res" id="res"></div></div>
+        </div>
+      </section>` : ""}`;
+  }
+  function wire(g) {
+    if (!g) {
+      $("gq").oninput = (e) => { ui.gq = e.target.value; render(); };
+      return;
+    }
+    $("back").onclick = () => go(null);
+    document.querySelectorAll("[data-tab]").forEach((b) => (b.onclick = () => {
+      ui.tab = b.dataset.tab;
+      document.querySelectorAll("[data-tab]").forEach((x) => x.setAttribute("aria-selected", String(x === b)));
+      for (const k of ["items", "accounts", "script"]) { const s = $("t-" + k); if (s) s.hidden = k !== ui.tab; }
+      if (ui.tab === "script") pollResults();
+    }));
+    $("iq").oninput = (e) => { ui.iq = e.target.value; ui.ipage = 0; render(); };
+    $("irar").onchange = (e) => { ui.irar = e.target.value; ui.ipage = 0; render(); };
+    $("aq").oninput = (e) => { ui.aq = e.target.value; render(); };
+    $("sort").value = ui.sort;
+    $("sort").onchange = (e) => { ui.sort = e.target.value; render(); };
+    if (EXEC) {
+      $("snips").innerHTML = SNIPS.map(([n], i) => `<button class="chip sm" type="button" data-snip="${i}">${esc(n)}</button>`).join("");
+      $("snips").querySelectorAll("[data-snip]").forEach((b) => (b.onclick = () => { $("code").value = SNIPS[b.dataset.snip][1]; store("mtwin.webScript", $("code").value); $("code").focus(); }));
+      $("code").value = store("mtwin.webScript") || "";
+      $("code").oninput = () => store("mtwin.webScript", $("code").value);
+      $("code").onkeydown = (e) => {
+        if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); run(); }
+        if (e.key === "Tab") { e.preventDefault(); const t = e.target, s = t.selectionStart; t.setRangeText("\t", s, t.selectionEnd, "end"); }
+      };
+      $("runGo").onclick = run;
+      $("clearRes").onclick = () => { cleared = Date.now(); drawResults([]); };
+      drawResults(lastResults);
+      if (ui.tab === "script") pollResults();
+    }
+  }
+  let shownRows = [];
+  function drawGame(g) {
+    const pcs = [...new Set(g.accounts.map((a) => a.pc).filter(Boolean))].sort();
+    if (ui.pc !== "*" && !pcs.includes(ui.pc)) ui.pc = "*";
+    $("pcs").innerHTML = pcs.length > 1 ? [["*", "All PCs"], ...pcs.map((p) => [p, p])].map(([k, l]) => `<button class="chip sm" type="button" data-pc="${esc(k)}" aria-pressed="${ui.pc === k}">${k === "*" ? "" : I.pc}${esc(l)}</button>`).join("") : "";
+    $("pcs").querySelectorAll("[data-pc]").forEach((b) => (b.onclick = () => { ui.pc = b.dataset.pc; render(); }));
+    const accs = g.accounts.filter((a) => ui.pc === "*" || a.pc === ui.pc);
+
+    // Tiles: online, average level, then each value summed (with its picture when it has one).
+    const levels = accs.map((a) => a.level).filter((l) => l != null);
+    const sums = new Map();
+    for (const a of accs) for (const v of a.values) { const s = sums.get(v.name) || { amount: 0, image: v.image }; s.amount += v.amount; sums.set(v.name, s); }
+    const tile = (k, v, ico, cls = "") => `<div class="panel tile">${ico ?? ""}<div style="min-width:0"><div class="k">${esc(k)}</div><div class="v ${cls}">${v}</div></div></div>`;
+    $("strip").innerHTML = tile("Online", `${accs.filter((a) => a.online).length} / ${accs.length}`, null, "ok")
+      + (levels.length ? tile("Average level", num(Math.round((levels.reduce((x, y) => x + y, 0) / levels.length) * 10) / 10)) : "")
+      + [...sums].slice(0, 6).map(([n, s]) => { const src = imageOf(s.image); return tile(n, num(s.amount), `<span class="ico">${src ? `<img src="${esc(src)}" alt="">` : esc(initials(n))}</span>`); }).join("");
+
+    drawItems(g, accs);
+    drawAccounts(accs);
+    if (EXEC) drawTarget(accs);
+  }
+
+  // Items, merged across the accounts shown.
+  const RARITY = [["secret", "#ff3d6e"], ["exotic", "#e0409a"], ["ancient", "#d16cf0"], ["divine", "#f5d142"], ["celestial", "#7fd8ff"], ["godly", "#ff4d5e"], ["mythic", "#e5484d"], ["legend", "#f0a020"], ["epic", "#a77bf3"], ["rare", "#4c9aff"], ["uncommon", "#34c77b"], ["common", "#8b8b94"]];
+  const rarityColour = (r) => { const l = (r || "").toLowerCase(); return (RARITY.find(([k]) => l.includes(k)) || [null, "#8b8b94"])[1]; };
+  const rarityRank = (r) => { const l = (r || "").toLowerCase(); const i = RARITY.findIndex(([k]) => l.includes(k)); return i < 0 ? RARITY.length : i; };
+  const PER_PAGE = 30;
+  function drawItems(g, accs) {
+    const merged = new Map();
+    for (const a of accs) for (const it of a.items) {
+      const m = merged.get(it.id) || { ...it, count: 0, owners: 0, src: pic(g.id, it) };
+      m.count += it.count || 1;
+      m.owners++;
+      merged.set(it.id, m);
+    }
+    const items = [...merged.values()];
+    $("n-items").textContent = items.length || "";
+    const cats = [...new Set(items.map((i) => i.category || "Other"))].sort();
+    if (ui.icat !== "*" && !cats.includes(ui.icat)) ui.icat = "*";
+    $("icats").innerHTML = cats.length > 1 ? ["*", ...cats].map((c) => `<button class="chip sm" type="button" data-icat="${esc(c)}" aria-pressed="${ui.icat === c}">${c === "*" ? "All" : esc(c)}</button>`).join("") : "";
+    $("icats").querySelectorAll("[data-icat]").forEach((b) => (b.onclick = () => { ui.icat = b.dataset.icat; ui.ipage = 0; render(); }));
+    const rars = [...new Set(items.map((i) => i.rarity).filter(Boolean))].sort((x, y) => rarityRank(x) - rarityRank(y));
+    if (ui.irar !== "*" && !rars.includes(ui.irar)) ui.irar = "*";
+    $("irar").hidden = !rars.length;
+    $("irar").innerHTML = `<option value="*">Rarity</option>` + rars.map((r) => `<option value="${esc(r)}"${r === ui.irar ? " selected" : ""}>${esc(r)}</option>`).join("");
+    const q = ui.iq.trim().toLowerCase();
+    const shown = items
+      .filter((i) => (ui.icat === "*" || (i.category || "Other") === ui.icat) && (ui.irar === "*" || i.rarity === ui.irar) && (!q || (i.name + " " + (i.rarity || "")).toLowerCase().includes(q)))
+      .sort((x, y) => rarityRank(x.rarity) - rarityRank(y.rarity) || y.count - x.count || x.name.localeCompare(y.name));
+    $("isum").textContent = items.length ? `${num(items.length)} kinds · ${num(items.reduce((n, i) => n + i.count, 0))} total` : "";
+    if (!items.length) { $("items").innerHTML = `<div class="empty">No items reported for this game.</div>`; return; }
+    const pages = Math.max(1, Math.ceil(shown.length / PER_PAGE));
+    ui.ipage = Math.min(ui.ipage, pages - 1);
+    const page = shown.slice(ui.ipage * PER_PAGE, (ui.ipage + 1) * PER_PAGE);
+    $("items").innerHTML = (page.length
+      ? `<div class="items">${page.map((it) => `<div class="item" style="--c:${rarityColour(it.rarity)}" title="Held by ${it.owners} account${it.owners > 1 ? "s" : ""}">
+          <span class="rar${it.rarity ? "" : " none"}">${esc(it.rarity || "-")}</span><span class="cnt">×${num(it.count)}</span>
+          ${it.src ? `<img class="pic" src="${esc(it.src)}" alt="" loading="lazy">` : `<span class="nopic">${esc(initials(it.name))}</span>`}
+          <span class="nm">${esc(it.name)}</span>${it.category ? `<span class="cat">${esc(it.category)}</span>` : ""}</div>`).join("")}</div>`
+      : `<div class="empty">No items match.</div>`)
+      + (pages > 1 ? `<div class="pager"><button class="btn sm" type="button" id="ip" ${ui.ipage ? "" : "disabled"}>Prev</button><span>${ui.ipage + 1} / ${pages}</span><button class="btn sm" type="button" id="in" ${ui.ipage < pages - 1 ? "" : "disabled"}>Next</button></div>` : "");
+    const p = $("ip"), n = $("in");
+    if (p) p.onclick = () => { ui.ipage--; render(); };
+    if (n) n.onclick = () => { ui.ipage++; render(); };
+  }
+
+  // Accounts
+  const slow = (a) => a.online && data.now - a.lastSeen > 20000;
+  const state = (a) => a.online ? (slow(a) ? `<span class="st slow"><span class="dot" style="background:var(--warn)"></span>Slow</span>` : `<span class="st on"><span class="dot on"></span>Online</span>`) : `<span class="st off"><span class="dot"></span>Offline</span>`;
   function matches(a, q) {
     if (!q) return true;
-    const hay = [a.name, a.displayName, a.gameName, a.pc, ...a.values.map((v) => v.name), ...a.stats.map((s) => s.name + " " + s.value), ...a.items.map((i) => i.name)].join(" ").toLowerCase();
+    const hay = [a.name, a.displayName, a.pc, ...a.values.map((v) => v.name), ...a.stats.map((s) => s.name + " " + s.value), ...a.items.map((i) => i.name)].join(" ").toLowerCase();
     return q.split(/\s+/).every((w) => hay.includes(w));
   }
-  const stale = (a) => a.online && data.now - a.lastSeen > 20000;
-  const state = (a) => a.online ? (stale(a) ? `<span class="st stale"><span class="dot" style="background:var(--warn)"></span>Slow</span>` : `<span class="st on"><span class="dot on"></span>Online</span>`) : `<span class="st off"><span class="dot"></span>Offline</span>`;
-  const head = (a) => a.head ? `<img class="av" src="${esc(a.head)}" alt="" loading="lazy">` : `<span class="av"></span>`;
-  const valChips = (a) => a.values.map((v) => `<span class="chip">${esc(v.name)} <b>${num(v.amount)}</b></span>`).join("") + a.stats.map((s) => `<span class="chip">${esc(s.name)} <b>${esc(s.value)}${s.max != null ? "/" + num(s.max) : ""}</b></span>`).join("");
-  const box = (a) => EXEC ? `<input type="checkbox" class="cbx" data-pick="${esc(a.key)}" ${picked.has(a.key) ? "checked" : ""} aria-label="Pick ${esc(a.name)}">` : "";
-
-  function tableOf(rows) {
-    return `<div class="tbl-wrap"><table class="acc"><thead><tr>${EXEC ? `<th style="width:28px"><input type="checkbox" class="cbx" data-pickall ${rows.length && rows.every((a) => picked.has(a.key)) ? "checked" : ""} aria-label="Pick all shown"></th>` : ""}<th>Account</th><th>Level</th><th>Values</th><th>Items</th><th>Status</th><th>PC</th></tr></thead><tbody>${rows.map((a) => `
-      <tr class="${a.online ? "" : "off"} ${picked.has(a.key) ? "sel" : ""}">
-        ${EXEC ? `<td>${box(a)}</td>` : ""}
-        <td><div class="acc-who">${head(a)}<div><div class="nm">${esc(a.displayName || a.name)}</div><div class="un">@${esc(a.name)} <button class="copy" type="button" data-copy="${esc(a.name)}" title="Copy username">⧉</button></div></div></div>${a.errors && a.errors.length ? `<div class="err">⚠ ${esc(a.errors[0])}</div>` : ""}</td>
-        <td class="lv">${a.level != null ? num(a.level) : "—"}</td>
-        <td><div class="chips">${valChips(a) || '<span class="un">—</span>'}</div></td>
-        <td>${a.items.length ? num(a.items.reduce((n, i) => n + (i.count || 1), 0)) : "—"}</td>
-        <td>${state(a)}<div class="un">${ago(data.now - a.lastSeen)}</div></td>
-        <td class="un">${esc(a.pc || "")}</td>
-      </tr>`).join("")}</tbody></table></div>`;
-  }
-  function cardsOf(rows) {
-    return `<div class="grid">${rows.map((a) => `<article class="card${a.online ? "" : " off"}">
-      <div class="top2">${head(a)}<div style="min-width:0"><div class="nm">${esc(a.displayName || a.name)}</div><div class="un">@${esc(a.name)}</div></div>${a.level != null ? `<div class="lvb"><b>${num(a.level)}</b><span>Level</span></div>` : ""}</div>
-      ${valChips(a) ? `<div class="chips">${valChips(a)}</div>` : ""}
-      ${a.errors && a.errors.length ? `<div class="err">⚠ ${esc(a.errors[0])}</div>` : ""}
-      <div class="foot">${state(a)} · ${ago(data.now - a.lastSeen)}${a.pc ? " · " + esc(a.pc) : ""}${box(a)}</div>
-    </article>`).join("")}</div>`;
-  }
-
-  let shownRows = [];
-  function render() {
-    if (!data) return;
-    document.querySelectorAll("[data-view]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.view === view)));
-    const q = $("q").value.trim().toLowerCase();
-    renderGames(data.accounts);
-    const all = data.accounts.filter((a) => !hiddenGames.has(a.gameId));
-    const counts = { all: all.length, online: all.filter((a) => a.online).length, offline: all.filter((a) => !a.online).length };
-    $("shows").innerHTML = [["all", "All"], ["online", "Online"], ["offline", "Offline"]].map(([k, l]) => `<button class="opt" type="button" data-show="${k}" aria-pressed="${show === k}"><span class="dot ${k === "online" ? "on" : ""}" style="${k === "all" ? "background:var(--fg2)" : ""}"></span>${l}<span class="n">${counts[k]}</span></button>`).join("");
-    $("shows").querySelectorAll("[data-show]").forEach((b) => (b.onclick = () => { show = b.dataset.show; render(); }));
-    let rows = all.filter((a) => (show === "all" || (show === "online") === a.online) && matches(a, q));
+  function drawAccounts(accs) {
+    $("n-accounts").textContent = accs.length;
+    const q = ui.aq.trim().toLowerCase();
     const by = {
-      game: (a, b) => (a.gameName || "").localeCompare(b.gameName || "") || b.online - a.online || (b.level ?? -1) - (a.level ?? -1),
       level: (a, b) => (b.level ?? -1) - (a.level ?? -1) || b.online - a.online,
+      online: (a, b) => b.online - a.online || (b.level ?? -1) - (a.level ?? -1),
       seen: (a, b) => b.lastSeen - a.lastSeen,
       name: (a, b) => a.name.localeCompare(b.name),
-    }[$("sort").value];
-    rows = rows.slice().sort(by);
+    }[ui.sort];
+    const rows = accs.filter((a) => matches(a, q)).sort(by);
     shownRows = rows;
     for (const k of [...picked]) if (!data.accounts.some((a) => a.key === k)) picked.delete(k);
-
-    const levels = all.map((a) => a.level).filter((l) => l != null);
-    const avg = levels.length ? levels.reduce((x, y) => x + y, 0) / levels.length : null;
-    $("stats").innerHTML = [
-      [counts.online + "/" + counts.all, "Online"],
-      [new Set(all.map((a) => a.gameId)).size, "Games"],
-      [avg != null ? num(Math.round(avg * 10) / 10) : "—", "Avg level"],
-      [num(all.reduce((n, a) => n + a.items.length, 0)), "Items"],
-    ].map(([v, l]) => `<div class="kpi"><b>${esc(v)}</b><span>${esc(l)}</span></div>`).join("");
-
-    const sums = new Map();
-    for (const a of rows) for (const v of a.values) sums.set(v.name, (sums.get(v.name) || 0) + v.amount);
-    $("totals").innerHTML = [...sums].slice(0, 14).map(([n, v]) => `<span class="total">Σ ${esc(n)} <b>${num(v)}</b></span>`).join("");
-    renderInv(all);
-    renderTarget();
-
-    if (!all.length) { $("list").innerHTML = `<div class="empty">No reports yet. Run the Progress script in your executor (MTwin Manager → Progress → Get script), and accounts show up here every 10 seconds.</div>`; return; }
-    if (!rows.length) { $("list").innerHTML = `<div class="empty">Nothing matches.</div>`; return; }
-    const draw = view === "cards" ? cardsOf : tableOf;
-    if ($("sort").value === "game") {
-      const groups = new Map();
-      for (const a of rows) { const g = a.gameName || "Unknown game"; if (!groups.has(g)) groups.set(g, []); groups.get(g).push(a); }
-      $("list").innerHTML = [...groups].map(([g, as]) => `<div class="gh"><h2>${esc(g)}</h2><span>${as.filter((a) => a.online).length} online · ${as.length}</span></div>${draw(as)}`).join("");
-    } else {
-      $("list").innerHTML = draw(rows);
-    }
-    $("list").querySelectorAll("[data-pick]").forEach((c) => (c.onchange = () => { if (c.checked) picked.add(c.dataset.pick); else picked.delete(c.dataset.pick); render(); }));
-    $("list").querySelectorAll("[data-pickall]").forEach((c) => (c.onchange = () => { const group = c.closest(".tbl-wrap").querySelectorAll("[data-pick]"); group.forEach((x) => (c.checked ? picked.add(x.dataset.pick) : picked.delete(x.dataset.pick))); render(); }));
-    $("list").querySelectorAll("[data-copy]").forEach((b) => (b.onclick = () => navigator.clipboard?.writeText(b.dataset.copy).then(() => { b.textContent = "✓"; setTimeout(() => (b.textContent = "⧉"), 1200); })));
+    if (!rows.length) { $("accs").innerHTML = `<div class="empty" style="box-shadow:none">No accounts match.</div>`; return; }
+    const vals = (a) => a.values.map((v) => `<span class="val">${esc(v.name)} <b>${num(v.amount)}</b></span>`).join("") + a.stats.map((s) => `<span class="val">${esc(s.name)} <b>${esc(s.value)}${s.max != null ? "/" + num(s.max) : ""}</b></span>`).join("");
+    $("accs").innerHTML = `<table><thead><tr>${EXEC ? `<th style="width:36px"><input type="checkbox" class="cbx" id="pickall" ${rows.every((a) => picked.has(a.key)) ? "checked" : ""} aria-label="Pick all shown"></th>` : ""}<th>Account</th><th>Level</th><th>Values</th><th>Items</th><th>Status</th><th>PC</th></tr></thead><tbody>${rows.map((a) => `
+      <tr class="${a.online ? "" : "off"} ${picked.has(a.key) ? "sel" : ""}">
+        ${EXEC ? `<td><input type="checkbox" class="cbx" data-pick="${esc(a.key)}" ${picked.has(a.key) ? "checked" : ""} aria-label="Pick ${esc(a.name)}"></td>` : ""}
+        <td><div class="who">${a.head ? `<img class="av" src="${esc(a.head)}" alt="" loading="lazy">` : `<span class="av"></span>`}<div><div class="nm2">${esc(a.displayName || a.name)}</div><div class="un">@${esc(a.name)} <button class="copy" type="button" data-copy="${esc(a.name)}" title="Copy username">⧉</button></div></div></div>${a.errors && a.errors.length ? `<div class="err">⚠ ${esc(a.errors[0])}</div>` : ""}</td>
+        <td class="num">${a.level != null ? num(a.level) : "—"}</td>
+        <td><div class="vals">${vals(a) || '<span class="un">—</span>'}</div></td>
+        <td class="num">${a.items.length ? num(a.items.reduce((n, i) => n + (i.count || 1), 0)) : "—"}</td>
+        <td>${state(a)}<div class="un">${ago(data.now - a.lastSeen)}</div></td>
+        <td class="un">${esc(a.pc || "")}</td>
+      </tr>`).join("")}</tbody></table>`;
+    $("accs").querySelectorAll("[data-pick]").forEach((c) => (c.onchange = () => { if (c.checked) picked.add(c.dataset.pick); else picked.delete(c.dataset.pick); render(); }));
+    const all = $("pickall");
+    if (all) all.onchange = () => { rows.forEach((a) => (all.checked ? picked.add(a.key) : picked.delete(a.key))); render(); };
+    $("accs").querySelectorAll("[data-copy]").forEach((b) => (b.onclick = () => navigator.clipboard?.writeText(b.dataset.copy).then(() => { b.textContent = "✓"; setTimeout(() => (b.textContent = "⧉"), 1200); })));
   }
 
-  // ---- Games: each one shown or hidden (kept in this browser) ----
-  let hiddenGames = new Set();
-  try { hiddenGames = new Set(JSON.parse(store("mtwin.webHiddenGames") || "[]")); } catch {}
-  const saveHidden = () => store("mtwin.webHiddenGames", JSON.stringify([...hiddenGames]));
-  function renderGames(accounts) {
-    const games = new Map();
-    for (const a of accounts) { const g = games.get(a.gameId) || { name: a.gameName || "Unknown game", n: 0 }; g.n++; games.set(a.gameId, g); }
-    $("gamesSec").hidden = games.size < 2;
-    $("games").innerHTML = [...games].sort((x, y) => x[1].name.localeCompare(y[1].name)).map(([id, g]) => `<button class="opt" type="button" data-game="${esc(id)}" aria-pressed="${!hiddenGames.has(id)}"><span class="box"></span>${esc(g.name)}<span class="n">${g.n}</span></button>`).join("");
-    $("games").querySelectorAll("[data-game]").forEach((b) => (b.onclick = () => {
-      const id = b.dataset.game;
-      if (hiddenGames.has(id)) hiddenGames.delete(id);
-      else { hiddenGames.add(id); if ([...games.keys()].every((g) => hiddenGames.has(g))) hiddenGames = new Set(); }
-      saveHidden(); invPage = 0; render();
-    }));
-  }
-
-  // ---- CSV of what is shown ----
-  $("csvBtn").onclick = () => {
-    const cell = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
-    const lines = [["Account", "Display name", "Game", "Level", "Online", "Last seen", "PC", "Values", "Stats", "Items"].map(cell).join(",")];
-    for (const a of shownRows) lines.push([a.name, a.displayName, a.gameName, a.level ?? "", a.online ? "Yes" : "No", new Date(a.lastSeen).toISOString(), a.pc, a.values.map((v) => `${v.name}: ${v.amount}`).join("; "), a.stats.map((s) => `${s.name}: ${s.value}`).join("; "), a.items.map((i) => `${i.name} x${i.count}`).join("; ")].map(cell).join(","));
-    const url = URL.createObjectURL(new Blob(["﻿" + lines.join("\r\n")], { type: "text/csv" }));
-    const link = Object.assign(document.createElement("a"), { href: url, download: `mtwin-progress-${new Date().toISOString().slice(0, 10)}.csv` });
-    link.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-  };
-
-  // ---- Script runner (this PC's page only) ----
+  // ---- Script runner (this PC's page only): the picked accounts, or every online one in this game ----
   const SNIPS = [
     ["Who am I", 'local p = game.Players.LocalPlayer\nprint(p.Name, p.UserId, game.PlaceId, game.JobId)'],
     ["Position", 'local c = game.Players.LocalPlayer.Character\nprint(c and c:GetPivot().Position)'],
     ["Reset character", 'local h = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")\nif h then h.Health = 0 end\nprint("reset")'],
     ["Rejoin server", 'game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, game.Players.LocalPlayer)\nprint("rejoining")'],
   ];
-  function targets() {
-    const sel = data ? data.accounts.filter((a) => picked.has(a.key)) : [];
-    return sel.length ? sel : shownRows.filter((a) => a.online);
-  }
-  function renderTarget() {
-    if (!EXEC) return;
-    const ts = targets();
-    $("target").innerHTML = picked.size ? `Runs on <b>${picked.size} picked</b> · <button class="copy" type="button" id="unpick">clear picks</button>` : `Runs on <b>every online account shown (${ts.length})</b>. Tick accounts to pick some.`;
+  let gameAccs = [];
+  const targets = () => { const sel = gameAccs.filter((a) => picked.has(a.key)); return sel.length ? sel : gameAccs.filter((a) => a.online); };
+  function drawTarget(accs) {
+    gameAccs = accs;
+    const n = accs.filter((a) => picked.has(a.key)).length;
+    $("target").innerHTML = n ? `On <b>${n} picked</b> · <button class="copy" type="button" id="unpick">clear</button>` : `On every online account (${targets().length}). Pick some in Accounts.`;
     const u = $("unpick"); if (u) u.onclick = () => { picked.clear(); render(); };
   }
-  if (EXEC) {
-    $("runBtn").hidden = false;
-    $("snips").innerHTML = SNIPS.map(([n], i) => `<button type="button" data-snip="${i}">${esc(n)}</button>`).join("");
-    $("snips").querySelectorAll("[data-snip]").forEach((b) => (b.onclick = () => { $("code").value = SNIPS[b.dataset.snip][1]; $("code").focus(); }));
-    $("code").value = store("mtwin.webScript") || "";
-    $("code").oninput = () => store("mtwin.webScript", $("code").value);
-    $("code").onkeydown = (e) => {
-      if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); run(); }
-      if (e.key === "Tab") { e.preventDefault(); const t = e.target, s = t.selectionStart; t.setRangeText("\t", s, t.selectionEnd, "end"); }
-    };
-    $("runBtn").onclick = () => { $("drawer").dataset.open = ""; renderTarget(); pollResults(); };
-    $("drClose").onclick = () => delete $("drawer").dataset.open;
-    $("runGo").onclick = run;
-    $("clearRes").onclick = () => { cleared = Date.now(); drawResults([]); };
-  }
-  let cleared = 0;
+  let cleared = 0, lastResults = [];
   async function run() {
     const code = $("code").value;
     const ts = targets();
@@ -470,11 +535,13 @@
     pollResults();
   }
   function drawResults(list) {
+    lastResults = list;
+    if (!$("res")) return;
     list = list.filter((r) => r.at >= cleared);
-    $("res").innerHTML = list.length ? list.map((r) => {
-      const [cls, word] = r.ok === true ? ["ok", "Done"] : r.ok === false ? ["bad", "Error"] : r.picked ? ["run", "Running"] : ["wait", "Queued"];
-      return `<div class="rc"><div class="rc-h"><b>${esc(r.name)}</b><span class="pill ${cls}">${word}</span><span class="sc">${esc(r.script)}</span><span class="t">${new Date(r.at).toLocaleTimeString()}</span></div>${r.output ? `<pre>${esc(r.output)}</pre>` : ""}</div>`;
-    }).join("") : `<div class="empty" style="padding:24px">Nothing run yet.</div>`;
+    $("res").innerHTML = list.length ? list.slice().reverse().map((r) => {
+      const [cls, word] = r.ok === true ? ["ok", "Done"] : r.ok === false ? ["bad", "Error"] : r.picked ? ["busy", "Running"] : ["wait", "Queued"];
+      return `<div class="rc"><div class="rc-h"><b>${esc(r.name)}</b><span class="pill ${cls}">${word}</span><span class="t">${new Date(r.at).toLocaleTimeString()}</span></div>${r.output ? `<pre>${esc(r.output)}</pre>` : ""}</div>`;
+    }).join("") : `<div class="meta" style="padding:18px;text-align:center">Nothing run yet.</div>`;
   }
   let polling = 0;
   async function pollResults() {
@@ -482,73 +549,33 @@
     const me = ++polling;
     for (let i = 0; i < 90 && me === polling; i++) {
       try { const r = await fetch("/api/exec-results", { cache: "no-store" }); if (r.ok) drawResults(await r.json()); } catch {}
-      if (!("open" in $("drawer").dataset)) break;
+      if (ui.tab !== "script" || !$("res")) break;
       await new Promise((ok) => setTimeout(ok, 1500));
     }
   }
 
-  // ---- Inventory: items of the accounts shown, by category ----
-  const RARITY = [["secret", "#ff3d6e"], ["exotic", "#e0409a"], ["divine", "#f5d142"], ["celestial", "#7fd8ff"], ["mythic", "#e5484d"], ["legend", "#f0a020"], ["epic", "#a77bf3"], ["rare", "#3b8eea"], ["uncommon", "#2fbf71"], ["common", "#8a8a94"]];
-  const rarityColour = (r) => { const l = (r || "").toLowerCase(); return (RARITY.find(([k]) => l.includes(k)) || [null, "#8a8a94"])[1]; };
-  const rarityRank = (r) => { const l = (r || "").toLowerCase(); const i = RARITY.findIndex(([k]) => l.includes(k)); return i < 0 ? RARITY.length : i; };
-  let invTab = null, invPage = 0, invWho = "*";
-  const PER_PAGE = 24;
-  $("invQ").oninput = () => { invPage = 0; render(); };
-  $("invWho").onchange = () => { invWho = $("invWho").value; invPage = 0; render(); };
-  $("invPrev").onclick = () => { invPage = Math.max(0, invPage - 1); render(); };
-  $("invNext").onclick = () => { invPage++; render(); };
-  function pic(gameId, item) {
-    const id = item.image || (data.catalogImages && data.catalogImages[gameId] && data.catalogImages[gameId][item.id]) || "";
-    return (data.images && data.images[id]) || null;
-  }
-  function renderInv(accounts) {
-    const who = accounts.filter((a) => a.items.length);
-    if (!who.length) { $("inv").hidden = true; return; }
-    $("inv").hidden = false;
-    if (invWho !== "*" && !who.some((a) => a.key === invWho)) invWho = "*";
-    $("invWho").innerHTML = `<option value="*">All accounts</option>` + who.map((a) => `<option value="${esc(a.key)}"${a.key === invWho ? " selected" : ""}>${esc(a.displayName || a.name)}</option>`).join("");
-    const merged = new Map();
-    for (const a of who) {
-      if (invWho !== "*" && a.key !== invWho) continue;
-      for (const it of a.items) {
-        const k = a.gameId + "\u0000" + it.id;
-        const m = merged.get(k) || { ...it, count: 0, owners: 0, gameId: a.gameId, src: pic(a.gameId, it) };
-        m.count += it.count || 1;
-        m.owners++;
-        merged.set(k, m);
-      }
-    }
-    const items = [...merged.values()];
-    const cats = new Map();
-    for (const it of items) cats.set(it.category || "Other", (cats.get(it.category || "Other") || 0) + 1);
-    const tabs = [...cats].sort((x, y) => y[1] - x[1]);
-    if (!invTab || !cats.has(invTab)) invTab = tabs.length ? tabs[0][0] : null;
-    $("invTabs").innerHTML = tabs.map(([c, n]) => `<button class="inv-tab" role="tab" type="button" data-tab="${esc(c)}" aria-selected="${c === invTab}">${esc(c)} <b>${n}</b></button>`).join("");
-    $("invTabs").querySelectorAll("[data-tab]").forEach((b) => (b.onclick = () => { invTab = b.dataset.tab; invPage = 0; render(); }));
-    const q = $("invQ").value.trim().toLowerCase();
-    const shown = items
-      .filter((it) => (it.category || "Other") === invTab && (!q || (it.name + " " + it.rarity).toLowerCase().includes(q)))
-      .sort((x, y) => rarityRank(x.rarity) - rarityRank(y.rarity) || y.count - x.count || x.name.localeCompare(y.name));
-    const pages = Math.max(1, Math.ceil(shown.length / PER_PAGE));
-    invPage = Math.min(invPage, pages - 1);
-    const page = shown.slice(invPage * PER_PAGE, invPage * PER_PAGE + PER_PAGE);
-    $("invGrid").innerHTML = page.length
-      ? page.map((it) => `<div class="icard" style="--r:${rarityColour(it.rarity)}">${it.rarity ? `<span class="rar">${esc(it.rarity)}</span>` : ""}<span class="cnt">${num(it.count)}</span>${it.src ? `<img class="pic" src="${esc(it.src)}" alt="" loading="lazy">` : `<span class="nopic">${esc((it.name || "?").slice(0, 2).toUpperCase())}</span>`}<span class="nm" title="${esc(it.name)}">${esc(it.name)}</span>${invWho === "*" && it.owners > 1 ? `<span class="who">${it.owners} accounts</span>` : ""}</div>`).join("")
-      : `<div class="empty" style="grid-column:1/-1">Nothing here.</div>`;
-    $("invShowing").innerHTML = shown.length ? `Showing <b>${invPage * PER_PAGE + 1}–${invPage * PER_PAGE + page.length}</b> of <b>${shown.length}</b>` : "";
-    $("invPage").textContent = `${invPage + 1} / ${pages}`;
-    $("invPrev").disabled = invPage === 0;
-    $("invNext").disabled = invPage >= pages - 1;
-  }
+  // ---- CSV of the accounts on screen (a game's, or all) ----
+  $("csvBtn").onclick = () => {
+    if (!data) return;
+    const rows = ui.game != null ? shownRows : data.accounts;
+    const cell = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const lines = [["Account", "Display name", "Game", "Level", "Online", "Last seen", "PC", "Values", "Stats", "Items"].map(cell).join(",")];
+    for (const a of rows) lines.push([a.name, a.displayName, a.gameName, a.level ?? "", a.online ? "Yes" : "No", new Date(a.lastSeen).toISOString(), a.pc, a.values.map((v) => `${v.name}: ${v.amount}`).join("; "), a.stats.map((s) => `${s.name}: ${s.value}`).join("; "), a.items.map((i) => `${i.name} x${i.count}`).join("; ")].map(cell).join(","));
+    const url = URL.createObjectURL(new Blob(["﻿" + lines.join("\r\n")], { type: "text/csv" }));
+    const link = Object.assign(document.createElement("a"), { href: url, download: `mtwin-progress-${new Date().toISOString().slice(0, 10)}.csv` });
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
 
   // ---- Google Sheet (SheetDB): the summary pushed every minute while this page is open ----
   const COLS = ["Account", "PC", "Game", "Level", "Online", "Last seen", "Values", "Stats", "Items"];
+  const SHEET_RE = /^https:\/\/sheetdb\.io\/api\/v1\/[\w-]+\/?$/;
   $("cols").innerHTML = COLS.map(esc).join("<em>|</em>");
   $("colN").textContent = COLS.length;
-  let sheetUrl = "";
-  try { sheetUrl = localStorage.getItem("mtwin.webSheetUrl") || ""; } catch {}
+  let sheetUrl = store("mtwin.webSheetUrl") || "";
   let sheetSaid = null;
-  const sheetRows = () => data.accounts.filter((a) => !hiddenGames.has(a.gameId)).map((a) => ({
+  const say = (cls, text) => { $("sheetMsg").className = "msg " + cls; $("sheetMsg").textContent = text; };
+  const sheetRows = () => data.accounts.map((a) => ({
     "Account": a.name, "PC": a.pc || "", "Game": a.gameName || "", "Level": a.level ?? "",
     "Online": a.online ? "Yes" : "No", "Last seen": new Date(a.lastSeen).toLocaleString(),
     "Values": a.values.map((v) => `${v.name}: ${num(v.amount)}`).join("; "),
@@ -571,45 +598,51 @@
         if (!add.ok) throw new Error("HTTP " + add.status);
       }
       sheetSaid = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    } catch (e) {
+    } catch {
       sheetSaid = "failed";
     }
     sheetBadge();
   }
   const dlg = $("sheet");
-  $("sheetBtn").onclick = () => { $("sheetUrl").value = sheetUrl; $("sheetMsg").textContent = ""; $("sheetMsg").className = "dlg-msg"; for (const id of ["stepCopy", "stepUrl", "stepCheck"]) delete $(id).dataset.done; dlg.showModal(); };
+  $("sheetBtn").onclick = () => { $("sheetUrl").value = sheetUrl; say("", ""); for (const id of ["stepCopy", "stepUrl", "stepCheck"]) delete $(id).dataset.done; dlg.showModal(); };
   $("sheetClose").onclick = $("sheetCancel").onclick = () => dlg.close();
   $("sheetCopy").onclick = async () => {
-    try { await navigator.clipboard.writeText(COLS.join("\t")); $("stepCopy").dataset.done = ""; $("sheetMsg").className = "dlg-msg ok"; $("sheetMsg").textContent = "Copied: paste it into cell A1."; }
-    catch { $("sheetMsg").className = "dlg-msg bad"; $("sheetMsg").textContent = "Couldn't copy. Type the column names into row 1 instead."; }
+    try { await navigator.clipboard.writeText(COLS.join("\t")); $("stepCopy").dataset.done = ""; say("ok", "Copied: paste it into cell A1."); }
+    catch { say("bad", "Couldn't copy. Type the column names into row 1 instead."); }
   };
   $("sheetVerify").onclick = async () => {
     const url = $("sheetUrl").value.trim();
-    $("sheetMsg").className = "dlg-msg";
-    if (!/^https:\/\/sheetdb\.io\/api\/v1\/[\w-]+\/?$/.test(url)) { $("sheetMsg").className = "dlg-msg bad"; $("sheetMsg").textContent = "That isn't a SheetDB API URL (https://sheetdb.io/api/v1/…)."; return; }
-    $("sheetMsg").textContent = "Checking…";
+    if (!SHEET_RE.test(url)) return say("bad", "That isn't a SheetDB API URL (https://sheetdb.io/api/v1/…).");
+    say("", "Checking…");
     try {
       const r = await fetch(url.replace(/\/+$/, "") + "/keys");
       if (!r.ok) throw new Error("HTTP " + r.status);
       const keys = await r.json();
       const missing = COLS.filter((c) => !keys.includes(c));
-      if (missing.length) { $("sheetMsg").className = "dlg-msg bad"; $("sheetMsg").textContent = "Row 1 is missing: " + missing.join(", ") + ". Copy the schema into A1."; }
-      else { $("stepUrl").dataset.done = ""; $("stepCheck").dataset.done = ""; $("sheetMsg").className = "dlg-msg ok"; $("sheetMsg").textContent = "Connected. Save to start."; }
-    } catch (e) { $("sheetMsg").className = "dlg-msg bad"; $("sheetMsg").textContent = "SheetDB didn't answer (" + e.message + ")."; }
+      if (missing.length) say("bad", "Row 1 is missing: " + missing.join(", ") + ". Copy the header row into A1.");
+      else { $("stepUrl").dataset.done = ""; $("stepCheck").dataset.done = ""; say("ok", "Connected. Save to start."); }
+    } catch (e) { say("bad", "SheetDB didn't answer (" + e.message + ")."); }
   };
   $("sheetSave").onclick = () => {
     const url = $("sheetUrl").value.trim();
-    if (url && !/^https:\/\/sheetdb\.io\/api\/v1\/[\w-]+\/?$/.test(url)) { $("sheetMsg").className = "dlg-msg bad"; $("sheetMsg").textContent = "That isn't a SheetDB API URL (https://sheetdb.io/api/v1/…)."; return; }
+    if (url && !SHEET_RE.test(url)) return say("bad", "That isn't a SheetDB API URL (https://sheetdb.io/api/v1/…).");
     sheetUrl = url;
-    try { localStorage.setItem("mtwin.webSheetUrl", sheetUrl); } catch {}
+    store("mtwin.webSheetUrl", sheetUrl || null);
     sheetSaid = null;
     dlg.close();
     sheetBadge();
     pushSheet();
   };
-  $("sheetOff").onclick = () => { sheetUrl = ""; try { localStorage.removeItem("mtwin.webSheetUrl"); } catch {} sheetSaid = null; dlg.close(); sheetBadge(); };
+  $("sheetOff").onclick = () => { sheetUrl = ""; store("mtwin.webSheetUrl", null); sheetSaid = null; dlg.close(); sheetBadge(); };
   sheetBadge();
   setInterval(() => { if (sheetUrl) pushSheet(); }, 60000);
+
+  // Keyboard: / searches, Escape goes back to the games.
+  document.addEventListener("keydown", (e) => {
+    const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName || "");
+    if (e.key === "/" && !typing) { e.preventDefault(); document.querySelector(".page input[type=search]:not([hidden])")?.focus(); }
+    if (e.key === "Escape" && !typing && ui.game != null && !dlg.open) go(null);
+  });
 
   async function load() {
     if (paused) return;
