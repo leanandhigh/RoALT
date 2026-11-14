@@ -540,16 +540,44 @@ pub fn memory_target(wv: &Webview, low: bool) {
 /// leaves no trace).
 pub fn log_process_failures(window: &WebviewWindow) {
     let label = window.label().to_string();
+    let app = window.app_handle().clone();
     let r = window.with_webview(move |pv| {
+        use webview2_com::Microsoft::Web::WebView2::Win32::{
+            COREWEBVIEW2_PROCESS_FAILED_KIND_BROWSER_PROCESS_EXITED, COREWEBVIEW2_PROCESS_FAILED_KIND_GPU_PROCESS_EXITED,
+            COREWEBVIEW2_PROCESS_FAILED_KIND_RENDER_PROCESS_EXITED, COREWEBVIEW2_PROCESS_FAILED_KIND_RENDER_PROCESS_UNRESPONSIVE,
+        };
         use webview2_com::ProcessFailedEventHandler;
         let label = label.clone();
-        let handler = ProcessFailedEventHandler::create(Box::new(move |_, args| {
+        let app = app.clone();
+        let handler = ProcessFailedEventHandler::create(Box::new(move |sender, args| {
             let mut kind = Default::default();
             if let Some(args) = args {
                 // SAFETY: a live args interface handed to the event handler.
                 unsafe { args.ProcessFailedKind(&mut kind)? };
             }
             log::error!("WebView2 process failed in window \"{label}\" (kind {})", kind.0);
+            if label != "main" {
+                return Ok(());
+            }
+            // MTwin Manager's own window: a black or frozen page is brought back (long runs on
+            // laptops lose the renderer or the GPU process, after sleep above all).
+            if kind == COREWEBVIEW2_PROCESS_FAILED_KIND_BROWSER_PROCESS_EXITED {
+                log::error!("the UI's browser process is gone: restarting MTwin Manager");
+                let app = app.clone();
+                tauri::async_runtime::spawn(async move {
+                    tokio::time::sleep(Duration::from_millis(500)).await;
+                    app.restart();
+                });
+            } else if [COREWEBVIEW2_PROCESS_FAILED_KIND_RENDER_PROCESS_EXITED, COREWEBVIEW2_PROCESS_FAILED_KIND_RENDER_PROCESS_UNRESPONSIVE, COREWEBVIEW2_PROCESS_FAILED_KIND_GPU_PROCESS_EXITED].contains(&kind)
+                && let Some(wv) = sender
+            {
+                log::warn!("reloading the UI after its WebView2 process failed");
+                beat();
+                // SAFETY: COM call on the thread that raised the event, on the live sender.
+                if let Err(e) = unsafe { wv.Reload() } {
+                    log::warn!("could not reload the UI: {e}");
+                }
+            }
             Ok(())
         }));
         let mut token = Default::default();
@@ -562,6 +590,49 @@ pub fn log_process_failures(window: &WebviewWindow) {
     if let Err(e) = r {
         log::warn!("could not watch WebView2 process failures: {e}");
     }
+}
+
+/// When the UI last said it is alive (`ui_heartbeat`, every 10 s), Unix ms; 0 before it first did.
+static LAST_BEAT: std::sync::atomic::AtomicI64 = std::sync::atomic::AtomicI64::new(0);
+/// A page on screen this long without a heartbeat is frozen: it is reloaded.
+const FROZEN_MS: i64 = 90_000;
+
+fn beat() {
+    LAST_BEAT.store(crate::commands::now_ms(), Ordering::Relaxed);
+}
+
+/// The UI is alive (its page calls this every 10 s).
+#[tauri::command]
+pub fn ui_heartbeat() {
+    beat();
+}
+
+/// Watches MTwin Manager's own page: on screen (not minimized or hidden, where its timers may be held
+/// back) and silent for `FROZEN_MS`, it is reloaded. A page that never said anything yet (still
+/// starting, the splash) is left alone.
+pub fn watch_ui(app: AppHandle) {
+    std::thread::spawn(move || loop {
+        std::thread::sleep(Duration::from_secs(15));
+        let last = LAST_BEAT.load(Ordering::Relaxed);
+        if last == 0 || crate::commands::now_ms() - last < FROZEN_MS {
+            continue;
+        }
+        let Some(w) = app.get_webview_window("main") else { continue };
+        if !w.is_visible().unwrap_or(false) || w.is_minimized().unwrap_or(true) {
+            continue;
+        }
+        log::warn!("the UI hasn't answered for {} s: reloading it", (crate::commands::now_ms() - last) / 1000);
+        beat();
+        let r = w.with_webview(|pv| {
+            // SAFETY: COM call on the main thread (with_webview) on a live controller.
+            if let Err(e) = unsafe { pv.controller().CoreWebView2().and_then(|wv| wv.Reload()) } {
+                log::warn!("could not reload the UI: {e}");
+            }
+        });
+        if let Err(e) = r {
+            log::warn!("could not reload the UI: {e}");
+        }
+    });
 }
 
 /// NUL-terminated UTF-16 for a `PCWSTR`, zeroed on drop.

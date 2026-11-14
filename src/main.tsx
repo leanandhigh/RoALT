@@ -7,7 +7,7 @@ import "./styles/thai.css";
 import "./theme.css";
 import App from "./App";
 import { ACCENT_KEY, BRAND_ACCENT, THEME_KEY, accentTokens, applyAccent } from "./app/theme";
-import { debugLog } from "./api";
+import { api, debugLog } from "./api";
 import { loadLastLang, t } from "./i18n";
 import { LayoutPreview, type PreviewData } from "./features/launch/LayoutPreview";
 import { assertMotionTokens, installReactive, installReducedMotion } from "./ui/motion";
@@ -111,3 +111,7 @@ createRoot(document.getElementById("root")!).render(
     </StrictMode>
   ),
 );
+
+// Says the page is alive every 10 s: a frozen or blank page on screen is reloaded by the backend.
+setInterval(() => void api.uiHeartbeat().catch(() => {}), 10_000);
+void api.uiHeartbeat().catch(() => {});

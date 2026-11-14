@@ -1686,6 +1686,8 @@ async function handle(cmd: string, args: Args): Promise<unknown> {
       return args.options?.directory ? "D:\\MTwin Manager data" : "C:\\Users\\you\\Documents\\MTwin-backup-2026-10-01.mtwin";
     case "plugin:window|is_maximized":
       return false;
+    case "ui_heartbeat":
+      return null;
     default:
       // Window controls, opener and clipboard calls do nothing in the preview.
       if (!/^plugin:(window|opener|clipboard-manager)\|/.test(cmd)) console.warn("[mock ipc] unhandled", cmd);

@@ -255,6 +255,7 @@ fn main_window(app: &TauriApp, data_dir: &Path, skip_splash: bool) -> tauri::Res
     }
     let w = builder.build()?;
     webview::log_process_failures(&w);
+    webview::watch_ui(app.handle().clone());
     splash::start(app.handle(), &w, skip_splash)
 }
 
@@ -262,12 +263,12 @@ fn main_window(app: &TauriApp, data_dir: &Path, skip_splash: bool) -> tauri::Res
 /// UI checks. Every window on the UI's WebView2 profile passes the same (WebView2 refuses a second set
 /// of options).
 pub(crate) fn cdp_args() -> Option<String> {
-    // Tauri's own defaults (passing any arguments replaces them), and no slowing down while the
-    // window is minimized, hidden in the tray or covered: launches, batches and the live views are
-    // driven from the page and must keep their pace then.
+    // Tauri's own defaults (passing any arguments replaces them), and timers kept at their pace while
+    // the window is minimized, hidden in the tray or covered: launches and batches are driven from the
+    // page. The page still learns it is hidden or covered, so the live client pictures stop then (on a
+    // laptop, hours of them in a covered window wore the GPU process out and left the window black).
     let mut args = String::from(
-        "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection,CalculateNativeWinOcclusion \
-         --disable-background-timer-throttling --disable-renderer-backgrounding --disable-backgrounding-occluded-windows",
+        "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection --disable-background-timer-throttling",
     );
     #[cfg(debug_assertions)]
     if let Ok(port) = std::env::var("MTWIN_CDP_PORT") {
@@ -758,6 +759,7 @@ fn main() {
             progress::progress_state,
             progress::progress_web,
             commands::accounts_set_farm,
+            webview::ui_heartbeat,
             commands::accounts_tool,
             executor::executor_status,
             executor::executor_launch,

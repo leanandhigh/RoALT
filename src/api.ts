@@ -167,6 +167,8 @@ export const api = {
   vaultRecoverySave: (path: string, code: string) => invoke<void>("vault_recovery_save", { path, code }),
   vaultRecoveryCopy: (code: string) => invoke<void>("vault_recovery_copy", { code }),
   appActivity: () => invoke<void>("app_activity"),
+  /** The UI is alive: a page on screen that stops saying so is reloaded (`webview::watch_ui`). */
+  uiHeartbeat: () => invoke<void>("ui_heartbeat"),
   /** The splash reached its grow: resolves once the window has grown into the app. */
   splashDone: () => invoke<void>("splash_done"),
 
