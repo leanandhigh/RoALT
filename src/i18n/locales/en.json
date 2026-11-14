@@ -1716,7 +1716,7 @@
   "progress.docsCardLoader": "Once, in your executor's autoexec folder.",
   "progress.docsCardEvery": "Runs first in every game: leaderstats and level.",
   "progress.docsCardGame": "Each game's own values, items and stats.",
-  "progress.docsTipPc": "Give each PC its own PC_NAME: the Website and Sheet sync tell them apart by it.",
+  "progress.docsTipPc": "Give each PC its own PC_NAME: the Progress page and the website tell them apart by it.",
   "progress.docsNoteDex": "Use Dex (or your executor's explorer) to find the real paths in your game, then change the examples to match.",
   "progress.docsTipSuffix": "Numbers games show with suffixes, like 1.5K, $74.3Td or 412 No, are read as real numbers, so totals and sorting work.",
   "progress.docsWarnRemote": "Only call remotes that only read data. A remote that changes something (buys, sells, spends) would do it every 10 seconds.",

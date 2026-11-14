@@ -369,5 +369,6 @@
   "Restart after 3 to 240 minutes without a report.": "รีสตาร์ทได้หลังไม่มีรายงาน 3 ถึง 240 นาที",
   "{name} is done. No spare account is left to farm next.": "{name} เสร็จแล้ว ไม่มีบัญชีสำรองเหลือให้ฟาร์มต่อ",
   "{old} is done: {new} farms next.": "{old} เสร็จแล้ว: {new} ฟาร์มต่อ",
-  "{name} stopped reporting progress: restarting it.": "{name} หยุดส่งความคืบหน้า: กำลังรีสตาร์ท"
+  "{name} stopped reporting progress: restarting it.": "{name} หยุดส่งความคืบหน้า: กำลังรีสตาร์ท",
+  "This shared page can only look. Change things in MTwin Manager or on the page this PC serves.": "หน้าที่แชร์นี้ดูได้อย่างเดียว เปลี่ยนแปลงได้ใน MTwin Manager หรือหน้าที่เปิดจากเครื่องนี้"
 }

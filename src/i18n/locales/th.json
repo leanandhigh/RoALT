@@ -1658,7 +1658,7 @@
   "progress.docsCardLoader": "ใส่ครั้งเดียวในโฟลเดอร์ autoexec ของ executor",
   "progress.docsCardEvery": "ทำงานก่อนในทุกเกม: leaderstats และเลเวล",
   "progress.docsCardGame": "ค่า ไอเท็ม และสถิติของแต่ละเกม",
-  "progress.docsTipPc": "ตั้ง PC_NAME ให้แต่ละเครื่องต่างกัน เว็บไซต์และ Sheet sync ใช้ชื่อนี้แยกเครื่อง",
+  "progress.docsTipPc": "ตั้ง PC_NAME ให้แต่ละเครื่องต่างกัน หน้า Progress และเว็บไซต์ใช้ชื่อนี้แยกเครื่อง",
   "progress.docsNoteDex": "ใช้ Dex (หรือตัวสำรวจของ executor) หา path จริงในเกม แล้วแก้ตัวอย่างให้ตรง",
   "progress.docsTipSuffix": "ตัวเลขที่เกมแสดงพร้อมหน่วยย่อ เช่น 1.5K, $74.3Td หรือ 412 No จะถูกอ่านเป็นตัวเลขจริง ใช้รวมและเรียงลำดับได้",
   "progress.docsWarnRemote": "เรียกเฉพาะ remote ที่อ่านข้อมูลเท่านั้น ถ้า remote เปลี่ยนแปลงอะไร (ซื้อ ขาย ใช้เงิน) จะทำทุก 10 วินาที",
