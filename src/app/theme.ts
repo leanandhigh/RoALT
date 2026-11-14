@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Settings } from "../api";
 import { useBackgroundUrl } from "../data";
-import { prefersReducedMotion } from "../ui/motion";
+import { prefersReducedMotion, setLiteUi } from "../ui/motion";
 import { writeStored } from "../ui/stored";
 
 /** Last applied theme, read before first paint so a light-theme start does not flash dark. */
@@ -70,6 +70,8 @@ export function useTheme(s: Settings | undefined) {
   const dim = Math.max(40, s?.backgroundDim ?? 60);
   const image = useBackgroundUrl(!!s);
   const applied = useRef<string | null>(null);
+  const lite = !!s?.liteUi;
+  useEffect(() => setLiteUi(lite), [lite]);
 
   useEffect(() => {
     if (!theme) return;

@@ -271,6 +271,8 @@
   "settings.closeToTrayHint": "The window hides; running clients and auto-rejoin keep working.",
   "settings.skipSplash": "Skip splash screen",
   "settings.skipSplashHint": "Opens MTwin Manager right away, without the start-up animation. Applies from the next start.",
+  "settings.liteUi": "Lighter on your PC",
+  "settings.liteUiHint": "For laptops and older PCs: no animations, blur or shadows, live pictures once a second, and the window drawn without the graphics card from the next start.",
   "settings.multi": "Multi-instance",
   "settings.multiHint": "MTwin Manager holds Roblox's single-instance lock while it runs, so each account gets its own client. Turn it on before the first client starts.",
   "settings.protectLogin": "Protect each client's sign-in",

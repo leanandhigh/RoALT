@@ -665,8 +665,8 @@
     gap: 10px;
     margin-inline: calc(-1 * var(--page-px, 28px));
     padding: 14px var(--page-px, 28px) 16px;
-    background: color-mix(in srgb, var(--ground) 92%, transparent);
-    backdrop-filter: blur(8px);
+    /* Solid, no blur: a blur under a sticky bar redraws the page behind it with every scroll. */
+    background: var(--ground);
     border-top: 1px solid var(--line);
   }
   .pl-dock-line {

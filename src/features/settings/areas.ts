@@ -29,7 +29,7 @@ export const AREAS: readonly AreaDef[] = [
     icon: "palette",
     groups: [
       { ids: ["theme", "accent", "background", "density", "tabLayout", "language", "sounds", "motion"] },
-      { label: "settings.group.window", ids: ["closeToTray", "skipSplash"] },
+      { label: "settings.group.window", ids: ["closeToTray", "skipSplash", "liteUi"] },
     ],
   },
   {

@@ -13,6 +13,8 @@ const KEY = "mtwin.motion";
 const { subscribe, notify } = signal();
 let installed = false;
 let pref: MotionPreference = "on";
+/** Settings › Appearance › Lighter on your PC: no motion whatever the Motion choice. */
+let lite = false;
 let apply = () => {};
 
 /** What an older MTwin Manager stored: "full" and "system" (no key) are On now; "reduced" stays. */
@@ -27,12 +29,21 @@ export function installReducedMotion() {
   pref = read(readStored(KEY));
   apply = () => {
     const root = document.documentElement;
-    root.toggleAttribute("data-rm", forced || pref !== "on");
-    root.toggleAttribute("data-motion-off", pref === "off");
+    root.toggleAttribute("data-rm", forced || lite || pref !== "on");
+    root.toggleAttribute("data-motion-off", lite || pref === "off");
+    root.toggleAttribute("data-lite", lite);
     notify();
   };
   apply();
 }
+
+/** Lighter on your PC (Settings.liteUi): motion off, and `data-lite` for what CSS leaves out. */
+export function setLiteUi(on: boolean) {
+  if (on === lite) return;
+  lite = on;
+  apply();
+}
+export const liteUi = () => lite;
 
 /** Less motion: Reduced or Off. Travel, scale and blur go; Reduced keeps fades and progress. */
 export const prefersReducedMotion = () => document.documentElement.hasAttribute("data-rm");

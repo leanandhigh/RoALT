@@ -1,5 +1,6 @@
 import { useEffect, useState, type RefObject } from "react";
 import { api } from "../../api";
+import { liteUi } from "../../ui/motion";
 import type { PreviewFps } from "./previewFps";
 
 /** How often a hidden MTwin Manager window looks again whether it is shown. */
@@ -48,7 +49,10 @@ export function useThumbnail(id: string, canvas: RefObject<HTMLCanvasElement | n
       wasVisible = visible;
       if (el && visible) {
         try {
-          const buf = await api.instanceThumbnail(id, Math.min(960, Math.max(320, Math.round(el.clientWidth * devicePixelRatio))), known);
+          // At most the card's width in pixels, and never above 640: a bigger picture costs copying
+          // and drawing every frame and shows nothing more on a card. Lighter on your PC: 320.
+          const cap = liteUi() ? 320 : 640;
+          const buf = await api.instanceThumbnail(id, Math.min(cap, Math.max(240, Math.round(el.clientWidth * devicePixelRatio))), known);
           if (stop) return;
           const head = new DataView(buf);
           const [w, h, code, age] = [head.getUint32(0, true), head.getUint32(4, true), head.getUint32(8, true), head.getUint32(20, true)];
@@ -70,7 +74,8 @@ export function useThumbnail(id: string, canvas: RefObject<HTMLCanvasElement | n
           // Ended or not started: the card goes with the next instances list.
         }
       }
-      const delay = Math.max(1000 / fps, (cardsInView * 1000) / PICTURES_PER_SECOND);
+      // Lighter on your PC: one picture a second at most.
+      const delay = Math.max(1000 / (liteUi() ? Math.min(fps, 1) : fps), (cardsInView * 1000) / PICTURES_PER_SECOND);
       if (!stop) timer = window.setTimeout(tick, visible ? Math.max(0, delay - (performance.now() - started)) : HIDDEN_MS);
     };
     void tick();

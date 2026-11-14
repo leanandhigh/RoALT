@@ -3539,6 +3539,7 @@ pub fn settings_set(app: AppHandle, s: State<'_, App>, patch: SettingsPatch) -> 
     if let Some(l) = patch.tab_layout { v.tab_layout = l }
     if let Some(c) = patch.close_to_tray { v.close_to_tray = c }
     if let Some(s) = patch.skip_splash { v.skip_splash = s }
+    if let Some(l) = patch.lite_ui { v.lite_ui = l }
     if let Some(p) = patch.protect_main { v.protect_main = p }
     if let Some(m) = patch.mute_on_launch { v.mute_on_launch = m }
     if let Some(l) = patch.window_layout { v.window_layout = l }

@@ -21,7 +21,6 @@
   main.page {
     background-image: radial-gradient(color-mix(in srgb, var(--fg) 9%, transparent) 1px, transparent 1.3px);
     background-size: 20px 20px;
-    background-attachment: local;
   }
   .page-title {
     font-weight: 700;

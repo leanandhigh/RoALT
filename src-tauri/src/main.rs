@@ -262,6 +262,9 @@ fn main_window(app: &TauriApp, data_dir: &Path, skip_splash: bool) -> tauri::Res
 /// The UI's WebView2 arguments (see inside); in debug builds also the DevTools protocol for automated
 /// UI checks. Every window on the UI's WebView2 profile passes the same (WebView2 refuses a second set
 /// of options).
+/// `Settings.lite_ui` as MTwin Manager started: WebView2 takes its arguments once per run.
+static LITE_UI: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+
 pub(crate) fn cdp_args() -> Option<String> {
     // Tauri's own defaults (passing any arguments replaces them), and timers kept at their pace while
     // the window is minimized, hidden in the tray or covered: launches and batches are driven from the
@@ -270,6 +273,11 @@ pub(crate) fn cdp_args() -> Option<String> {
     let mut args = String::from(
         "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection --disable-background-timer-throttling",
     );
+    // Lighter on this PC: the UI is drawn without the GPU (no GPU process memory, nothing for a
+    // weak or sleeping laptop GPU to lose), on one renderer.
+    if LITE_UI.get().copied().unwrap_or(false) {
+        args.push_str(" --disable-gpu --disable-gpu-compositing --renderer-process-limit=1");
+    }
     #[cfg(debug_assertions)]
     if let Ok(port) = std::env::var("MTWIN_CDP_PORT") {
         args.push_str(&format!(" --remote-debugging-port={port}"));
@@ -504,6 +512,7 @@ fn init(app: &TauriApp, data_dir: &Path, moved_from: Option<&Path>) -> std::resu
     // Before anything else is started, so a newer MTwin Manager is offered as soon as possible.
     self_update::spawn(app.handle().clone());
     app.manage(splash::Pending::default());
+    let _ = LITE_UI.set(settings.lite_ui);
     main_window(app, data_dir, settings.skip_splash).map_err(|e| {
         tr!(
             "MTwin Manager can't open its window ({why}).\n\nIf this PC was very busy, start MTwin Manager again. Otherwise it needs the Microsoft Edge WebView2 Runtime: \

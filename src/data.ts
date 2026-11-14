@@ -4,6 +4,7 @@ import { MutationCache, QueryClient, queryOptions, useMutation, useQuery, useQue
 import { api, type AccountPatch, type AccountPresence, type AccountSummary, type Group, type Headshot, type Settings, type SettingsPatch } from "./api";
 import { toastError } from "./ui/Toast";
 import { t } from "./i18n";
+import { liteUi } from "./ui/motion";
 
 export const qk = {
   vault: ["vault"],
@@ -74,10 +75,10 @@ export const useInstances = () => useQuery({ queryKey: qk.instances, queryFn: ap
 export const useCrashes = () => useQuery({ queryKey: qk.crashes, queryFn: api.crashesList });
 /** Polled every 2 s while a caller is mounted and the window is visible. */
 export const useMetrics = () =>
-  useQuery({ queryKey: qk.metrics, queryFn: api.instancesMetrics, staleTime: 0, refetchInterval: 2000, refetchIntervalInBackground: false });
+  useQuery({ queryKey: qk.metrics, queryFn: api.instancesMetrics, staleTime: 0, refetchInterval: () => (liteUi() ? 5000 : 2000), refetchIntervalInBackground: false });
 /** How busy the whole PC is; polled like the metrics. */
 export const useSystemUsage = (enabled: boolean) =>
-  useQuery({ queryKey: qk.system, queryFn: api.systemUsage, enabled, staleTime: 0, refetchInterval: 2000, refetchIntervalInBackground: false });
+  useQuery({ queryKey: qk.system, queryFn: api.systemUsage, enabled, staleTime: 0, refetchInterval: () => (liteUi() ? 5000 : 2000), refetchIntervalInBackground: false });
 /** While the lock is wanted but not held, asks again every 5 s (Roblox may have been closed);
  * so too after a failed read, which would otherwise stay unknown. */
 export const useMultiStatus = () =>

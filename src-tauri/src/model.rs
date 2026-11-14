@@ -305,6 +305,8 @@ pub struct Settings {
     pub close_to_tray: bool,
     /// Open at full size, without the start-up animation (`splash`); from the next start.
     pub skip_splash: bool,
+    /// Lighter on this PC: no GPU for the UI (from the next start), no motion, slower live pictures.
+    pub lite_ui: bool,
     /// Select-all (accounts list, launch picker) leaves the MAIN account out.
     pub protect_main: bool,
     /// Each client's own Windows audio session is muted once it reaches a game (`instances::audio`).
@@ -588,6 +590,7 @@ impl Default for Settings {
             executor_keep_open: false,
             close_to_tray: false,
             skip_splash: false,
+            lite_ui: false,
             protect_main: true,
             mute_on_launch: false,
             window_layout: WindowLayout::Off,
@@ -679,6 +682,8 @@ pub struct SettingsPatch {
     pub close_to_tray: Option<bool>,
     #[ts(optional)]
     pub skip_splash: Option<bool>,
+    #[ts(optional)]
+    pub lite_ui: Option<bool>,
     #[ts(optional)]
     pub protect_main: Option<bool>,
     #[ts(optional)]

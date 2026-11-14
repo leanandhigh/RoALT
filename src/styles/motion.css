@@ -493,3 +493,17 @@ textarea.mono {
 :root[data-motion-off]::view-transition-new(*) {
   animation: none !important;
 }
+
+/* Lighter on your PC (html[data-lite], Settings.liteUi; it also turns motion off above): nothing
+   that has to be redrawn behind or around other things. No blur, no shadows, no dot grid. */
+:root[data-lite] *,
+:root[data-lite] *::before,
+:root[data-lite] *::after {
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+:root[data-lite] main.page,
+:root[data-lite] .shell-body > main {
+  background-image: none !important;
+}

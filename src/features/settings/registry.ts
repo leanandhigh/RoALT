@@ -177,6 +177,7 @@ const SETTINGS_ENTRIES: readonly Entry[] = [
   },
   { id: "closeToTray", place: appearance, label: "settings.closeToTray", hint: "settings.closeToTrayHint", field: "closeToTray", control: SWITCH, aliases: ["minimize", "hide"] },
   { id: "skipSplash", place: appearance, label: "settings.skipSplash", hint: "settings.skipSplashHint", field: "skipSplash", control: SWITCH, aliases: ["intro", "startup", "animation"] },
+  { id: "liteUi", place: appearance, label: "settings.liteUi", hint: "settings.liteUiHint", field: "liteUi", control: SWITCH, aliases: ["performance", "laptop", "gpu", "lag", "resources", "ram", "cpu"] },
 
   {
     id: "encryption", place: security, label: "settings.encryption", field: "vault.mode", control: CUSTOM, aliases: ["dpapi", "aes", "password", "hello", "vault"],

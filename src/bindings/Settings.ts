@@ -89,6 +89,10 @@ closeToTray: boolean,
  */
 skipSplash: boolean, 
 /**
+ * Lighter on this PC: no GPU for the UI (from the next start), no motion, slower live pictures.
+ */
+liteUi: boolean, 
+/**
  * Select-all (accounts list, launch picker) leaves the MAIN account out.
  */
 protectMain: boolean, 
