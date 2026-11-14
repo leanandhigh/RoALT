@@ -36,6 +36,9 @@ const list = (s: string | null) => {
 };
 
 /** Progress: what each alt has in game, sent by a script the executor runs in each client. */
+/** On the Progress website (`src/web`): the same page, without the button that shares it. */
+const inWeb = () => !!(window as { __MTWIN_WEB__?: boolean }).__MTWIN_WEB__;
+
 export function ProgressView({ accounts }: { accounts: AccountSummary[] }) {
   const q = useProgress();
   const [game, setGameState] = useState<string | null>(lastGame);
@@ -59,9 +62,11 @@ export function ProgressView({ accounts }: { accounts: AccountSummary[] }) {
             <p className="page-sub">{t("progress.sub")}</p>
           </div>
           <div className="pg-head-tools">
-            <Button size="md" variant="ghost" icon="globe" onClick={() => setWebOpen(true)}>
-              {t("progress.web")}
-            </Button>
+            {!inWeb() && (
+              <Button size="md" variant="ghost" icon="globe" onClick={() => setWebOpen(true)}>
+                {t("progress.web")}
+              </Button>
+            )}
             <Button size="md" variant="ghost" icon="info" onClick={() => setDocsOpen(true)}>
               {t("progress.docs")}
             </Button>

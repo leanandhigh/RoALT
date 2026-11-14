@@ -35,7 +35,6 @@ use crate::error::{AppError, Result};
 pub const PORT: u16 = 16390;
 /// The progress website on the network (`web_share` on): read-only, and every request needs the key.
 pub const WEB_PORT: u16 = 16391;
-const WEB_PAGE: &str = include_str!("progress_web.html");
 /// The website's logo and tab icon: the app's own icon.
 const WEB_LOGO: &[u8] = include_bytes!("../icons/128x128.png");
 /// An account is online while it reported within this (the script reports every 10 s).
@@ -252,8 +251,6 @@ pub struct Progress {
     images: Mutex<HashMap<i64, Option<String>>>,
     /// Roblox user id → headshot URL, for the session.
     heads: Mutex<HashMap<i64, String>>,
-    /// Universe id → game icon URL, for the website; None: Roblox has none.
-    game_icons: Mutex<HashMap<i64, Option<String>>>,
     web_error: Mutex<Option<String>>,
     exec: Mutex<Exec>,
     /// What the page this PC is served must send to run a script (`/api/exec`); in no other page,
@@ -311,7 +308,6 @@ impl Progress {
             server: Mutex::new(ProgressServer { port: PORT, running: false, error: None }),
             images: Mutex::new(HashMap::new()),
             heads: Mutex::new(HashMap::new()),
-            game_icons: Mutex::new(HashMap::new()),
             web_error: Mutex::new(None),
             exec: Mutex::new(Exec::default()),
             exec_token: uuid::Uuid::new_v4().simple().to_string(),
@@ -386,71 +382,6 @@ impl Progress {
         out.into_iter().map(|(u, (at, place))| (u, at, place)).collect()
     }
 
-    fn web_json(&self) -> String {
-        let s = self.stored();
-        let heads = self.heads.lock().unwrap_or_else(|e| e.into_inner());
-        let now = now_ms();
-        let mut accounts: Vec<&ProgressAccount> = s.accounts.values().collect();
-        accounts.sort_by(|a, b| a.game_name.cmp(&b.game_name).then_with(|| a.name.to_lowercase().cmp(&b.name.to_lowercase())));
-        let rows: Vec<Value> = accounts
-            .iter()
-            .map(|a| {
-                serde_json::json!({
-                    "key": a.key, "pc": a.pc, "gameId": a.game_id, "gameName": a.game_name, "userId": a.user_id,
-                    "name": a.name, "displayName": a.display_name, "level": a.level, "values": a.values, "stats": a.stats,
-                    "items": a.items, "lastSeen": a.last_seen, "firstSeen": a.first_seen,
-                    "online": now - a.last_seen <= ONLINE_MS, "head": heads.get(&a.user_id),
-                })
-            })
-            .collect();
-        // Pictures known so far for the decal ids of items and values (by id), and the Catalog's
-        // own for items that have none of their own.
-        let images = self.images.lock().unwrap_or_else(|e| e.into_inner());
-        let mut pics = serde_json::Map::new();
-        for a in &accounts {
-            let catalog = s.catalog.get(&a.game_id);
-            let ids = a.items.iter().map(|i| {
-                if i.image.is_empty() { catalog.and_then(|c| c.iter().find(|e| e.id == i.id)).map_or("", |e| e.image.as_str()) } else { i.image.as_str() }
-            });
-            for id in ids.chain(a.values.iter().map(|v| v.image.as_str())) {
-                if let Ok(n) = id.parse::<i64>()
-                    && let Some(Some(url)) = images.get(&n)
-                {
-                    pics.insert(id.to_owned(), Value::String(url.clone()));
-                }
-            }
-        }
-        let catalog: serde_json::Map<String, Value> = s
-            .catalog
-            .iter()
-            .map(|(game, list)| (game.clone(), Value::Object(list.iter().filter(|e| !e.image.is_empty()).map(|e| (e.id.clone(), Value::String(e.image.clone()))).collect())))
-            .collect();
-        let game_icons: serde_json::Map<String, Value> = self
-            .game_icons
-            .lock()
-            .unwrap_or_else(|e| e.into_inner())
-            .iter()
-            .filter_map(|(id, url)| Some((id.to_string(), Value::String(url.clone()?))))
-            .collect();
-        serde_json::json!({ "now": now, "onlineMs": ONLINE_MS, "accounts": rows, "images": pics, "catalogImages": catalog, "gameIcons": game_icons }).to_string()
-    }
-
-    /// Decal ids of items and values (and their Catalog pictures) not looked up yet (at most `max`).
-    fn missing_images(&self, max: usize) -> Vec<i64> {
-        let s = self.stored();
-        let images = self.images.lock().unwrap_or_else(|e| e.into_inner());
-        let mut ids: HashSet<i64> = HashSet::new();
-        for a in s.accounts.values() {
-            for id in a.items.iter().map(|i| i.image.as_str()).chain(a.values.iter().map(|v| v.image.as_str())) {
-                ids.extend(id.parse::<i64>().ok());
-            }
-        }
-        for list in s.catalog.values() {
-            ids.extend(list.iter().filter_map(|e| e.image.parse::<i64>().ok()));
-        }
-        ids.into_iter().filter(|id| *id > 0 && !images.contains_key(id)).take(max).collect()
-    }
-
     fn exec(&self) -> std::sync::MutexGuard<'_, Exec> {
         self.exec.lock().unwrap_or_else(|e| e.into_inner())
     }
@@ -509,20 +440,6 @@ impl Progress {
         }
         let list: Vec<&ExecResult> = x.results.iter().rev().collect();
         serde_json::to_string(&list).unwrap_or_else(|_| "[]".into())
-    }
-
-    /// Universe ids of reported games without an icon looked up yet (at most `max`).
-    fn missing_game_icons(&self, max: usize) -> Vec<i64> {
-        let ids: HashSet<i64> = self.stored().accounts.values().filter_map(|a| a.game_id.parse::<i64>().ok()).filter(|id| *id > 0).collect();
-        let icons = self.game_icons.lock().unwrap_or_else(|e| e.into_inner());
-        ids.into_iter().filter(|id| !icons.contains_key(id)).take(max).collect()
-    }
-
-    /// User ids without a headshot yet (at most `max`).
-    fn missing_heads(&self, max: usize) -> Vec<i64> {
-        let ids: HashSet<i64> = self.stored().accounts.values().map(|a| a.user_id).filter(|id| *id > 0).collect();
-        let heads = self.heads.lock().unwrap_or_else(|e| e.into_inner());
-        ids.into_iter().filter(|id| !heads.contains_key(id)).take(max).collect()
     }
 
     fn web_key(&self) -> Option<String> {
@@ -898,8 +815,14 @@ async fn serve(handle: &AppHandle, mut stream: TcpStream) {
             let game = req.query.get("game").map(String::as_str).unwrap_or_default();
             respond(&mut stream, "200 OK", JSON, &progress.catalog_for_script(game)).await;
         }
-        ("GET", "/" | "/index.html") => respond(&mut stream, "200 OK", HTML, &WEB_PAGE.replace("__EXEC_TOKEN__", &progress.exec_token)).await,
-        ("GET", "/api/progress") => web_api(handle, &mut stream).await,
+        ("GET", "/" | "/index.html") => web_page(handle, &mut stream, Some(&progress.exec_token)).await,
+        ("GET", p) if p.starts_with("/assets/") => web_asset(handle, &mut stream, p).await,
+        ("POST", "/api/invoke") => {
+            // Changes only from the page this PC serves: it carries the token, and its own origin.
+            let local_origin = req.origin.is_empty() || req.origin == format!("http://127.0.0.1:{PORT}") || req.origin == format!("http://localhost:{PORT}");
+            let may_write = local_origin && req.exec_token == progress.exec_token;
+            web_invoke(handle, &mut stream, &req.body, may_write).await;
+        }
         ("GET", "/logo.png" | "/favicon.ico") => logo(&mut stream).await,
         // A reporter asks what to run; its account's key is "<game>:<user id>".
         ("GET", "/commands") => {
@@ -939,49 +862,93 @@ async fn serve(handle: &AppHandle, mut stream: TcpStream) {
     }
 }
 
-/// The website's data, with headshots fetched for accounts that have none yet.
-async fn web_api(handle: &AppHandle, stream: &mut TcpStream) {
-    let s = handle.state::<App>();
-    let missing = s.progress.missing_heads(100);
-    if !missing.is_empty() {
-        match s.api.headshots(&missing).await {
-            Ok(found) => s.progress.heads.lock().unwrap_or_else(|e| e.into_inner()).extend(found),
-            Err(e) => log::debug!("progress web: headshots: {e}"),
-        }
+/// The website: the app's own Progress page (`web.html`, built with the app; `src/web`). The page
+/// this PC serves gets the token that lets it change things (remove accounts, edit the Catalog, run
+/// scripts); a shared link's doesn't.
+async fn web_page(handle: &AppHandle, stream: &mut TcpStream, token: Option<&str>) {
+    let Some(page) = handle.asset_resolver().get("web.html".into()) else {
+        return respond(stream, "503 Service Unavailable", TEXT, "The website isn't part of this build.").await;
+    };
+    let mut html = String::from_utf8_lossy(&page.bytes).into_owned();
+    // No Tauri CSP here: the page talks to this server, not to IPC.
+    while let Some(at) = html.find("<meta http-equiv=\"Content-Security-Policy\"") {
+        let end = html[at..].find('>').map_or(html.len(), |e| at + e + 1);
+        html.replace_range(at..end, "");
     }
-    let missing = s.progress.missing_images(100);
-    if !missing.is_empty() {
-        let (found, complete) = s.api.asset_icons(&missing).await;
-        let mut cache = s.progress.images.lock().unwrap_or_else(|e| e.into_inner());
-        for id in &missing {
-            match found.get(id) {
-                Some(url) => {
-                    cache.insert(*id, Some(url.clone()));
-                }
-                None if complete => {
-                    cache.insert(*id, None);
-                }
-                None => {}
-            }
-        }
+    let token = token.unwrap_or_default();
+    let boot = format!("<script>window.__MTWIN_WEB_TOKEN__ = \"{token}\";</script>");
+    html = html.replacen("<head>", &format!("<head>{boot}"), 1);
+    respond(stream, "200 OK", HTML, &html).await;
+}
+
+/// One of the page's built files (`/assets/...`).
+async fn web_asset(handle: &AppHandle, stream: &mut TcpStream, path: &str) {
+    if path.contains("..") {
+        return respond(stream, "404 Not Found", TEXT, "not found").await;
     }
-    let missing = s.progress.missing_game_icons(50);
-    if !missing.is_empty() {
-        let (found, complete) = s.api.game_icons(&missing).await;
-        let mut cache = s.progress.game_icons.lock().unwrap_or_else(|e| e.into_inner());
-        for id in &missing {
-            match found.get(id) {
-                Some(url) => {
-                    cache.insert(*id, Some(url.clone()));
-                }
-                None if complete => {
-                    cache.insert(*id, None);
-                }
-                None => {}
-            }
-        }
+    match handle.asset_resolver().get(path.trim_start_matches('/').to_owned()) {
+        Some(a) => respond_bytes(stream, "200 OK", &a.mime_type, &a.bytes, "max-age=31536000, immutable").await,
+        None => respond(stream, "404 Not Found", TEXT, "not found").await,
     }
-    respond(stream, "200 OK", JSON, &s.progress.web_json()).await;
+}
+
+/// The page's backend calls: the app's own Progress commands, by name. Without `may_write` only the
+/// ones that read.
+async fn web_invoke(handle: &AppHandle, stream: &mut TcpStream, body: &[u8], may_write: bool) {
+    let v: Value = serde_json::from_slice(body).unwrap_or(Value::Null);
+    let cmd = v["cmd"].as_str().unwrap_or_default();
+    let args = &v["args"];
+    let arg = |name: &str| args.get(name).cloned().unwrap_or(Value::Null);
+    fn parse<T: serde::de::DeserializeOwned>(v: Value) -> Result<T> {
+        serde_json::from_value(v).map_err(|e| AppError::Invalid(e.to_string()))
+    }
+    fn out<T: Serialize>(r: Result<T>) -> Result<Value> {
+        r.map(|v| serde_json::to_value(v).unwrap_or(Value::Null))
+    }
+    const READS: &[&str] = &["progress_state", "progress_games", "progress_images", "progress_headshots"];
+    let r: Result<Value> = if !READS.contains(&cmd) && !may_write {
+        Err(AppError::Invalid(tr!("This shared page can only look. Change things in MTwin Manager or on the page this PC serves.")))
+    } else {
+        match cmd {
+            "progress_state" => out(Ok(progress_state(handle.state::<App>()))),
+            "progress_games" => match parse::<Vec<i64>>(arg("universeIds")) {
+                Ok(ids) => out(progress_games(handle.state::<App>(), ids).await),
+                Err(e) => Err(e),
+            },
+            "progress_images" => match parse::<Vec<i64>>(arg("ids")) {
+                Ok(ids) => out(progress_images(handle.state::<App>(), ids).await),
+                Err(e) => Err(e),
+            },
+            "progress_headshots" => match parse::<Vec<i64>>(arg("userIds")) {
+                Ok(ids) => out(progress_headshots(handle.state::<App>(), ids).await),
+                Err(e) => Err(e),
+            },
+            "progress_remove" => parse::<Vec<String>>(arg("keys")).and_then(|k| out(Ok(progress_remove(handle.state::<App>(), k)))),
+            "progress_catalog_save" => parse::<String>(arg("gameId"))
+                .and_then(|g| parse::<Vec<CatalogEntry>>(arg("entries")).map(|e| (g, e)))
+                .and_then(|(g, e)| out(progress_catalog_save(handle.state::<App>(), g, e))),
+            "progress_collector_save" => parse::<String>(arg("gameId"))
+                .and_then(|g| parse::<String>(arg("source")).map(|src| (g, src)))
+                .and_then(|(g, src)| out(progress_collector_save(handle.state::<App>(), g, src))),
+            "progress_auto_delete" => parse::<u32>(arg("hours")).map(|h| {
+                progress_auto_delete(handle.state::<App>(), h);
+                Value::Null
+            }),
+            "progress_game_add" => match parse::<String>(arg("input")) {
+                Ok(input) => out(progress_game_add(handle.state::<App>(), input).await),
+                Err(e) => Err(e),
+            },
+            "progress_game_remove" => parse::<String>(arg("gameId")).map(|g| {
+                progress_game_remove(handle.state::<App>(), g);
+                Value::Null
+            }),
+            _ => Err(AppError::Invalid(format!("unknown command {cmd}"))),
+        }
+    };
+    match r {
+        Ok(v) => respond(stream, "200 OK", JSON, &v.to_string()).await,
+        Err(e) => respond(stream, "400 Bad Request", JSON, &serde_json::to_string(&e).unwrap_or_default()).await,
+    }
 }
 
 /// The network listener: only the website and its data, each request with the key.
@@ -993,6 +960,10 @@ async fn serve_web(handle: &AppHandle, mut stream: TcpStream) {
     if req.method == "GET" && matches!(req.path.as_str(), "/logo.png" | "/favicon.ico") {
         return logo(&mut stream).await;
     }
+    // The page's code is MTwin Manager's own and public: no key (a script tag doesn't carry it).
+    if req.method == "GET" && req.path.starts_with("/assets/") {
+        return web_asset(handle, &mut stream, &req.path).await;
+    }
     let Some(key) = handle.state::<App>().progress.web_key() else {
         return respond(&mut stream, "403 Forbidden", TEXT, "sharing is off").await;
     };
@@ -1001,8 +972,8 @@ async fn serve_web(handle: &AppHandle, mut stream: TcpStream) {
     }
     match (req.method.as_str(), req.path.as_str()) {
         // Read-only on the network: no token, so no script runner.
-        ("GET", "/" | "/index.html") => respond(&mut stream, "200 OK", HTML, &WEB_PAGE.replace("__EXEC_TOKEN__", "")).await,
-        ("GET", "/api/progress") => web_api(handle, &mut stream).await,
+        ("GET", "/" | "/index.html") => web_page(handle, &mut stream, None).await,
+        ("POST", "/api/invoke") => web_invoke(handle, &mut stream, &req.body, false).await,
         _ => respond(&mut stream, "404 Not Found", TEXT, "not found").await,
     }
 }
